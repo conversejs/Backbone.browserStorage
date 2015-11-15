@@ -155,9 +155,13 @@ var _extension = {
 
   // Clear browserStorage for specific collection.
   _clear: function() {
-    var local = this.store,
-      itemRe = new RegExp("^" + this.name + "-");
+    var local = this.store, itemRe;
 
+    if (this.name.startsWith('+')) {
+      itemRe = new RegExp("^\\" + this.name + "-");
+    } else {
+      itemRe = new RegExp("^" + this.name + "-");
+    }
     // Remove id-tracking item (e.g., "foo").
     local.removeItem(this.name);
 
