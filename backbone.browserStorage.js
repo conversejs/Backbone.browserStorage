@@ -157,7 +157,7 @@ var _extension = {
   _clear: function() {
     var local = this.store, itemRe;
 
-    if (this.name.startsWith('+')) {
+    if (typeof this.name.startsWith === "function" && this.name.startsWith('+')) {
       itemRe = new RegExp("^\\" + this.name + "-");
     } else {
       itemRe = new RegExp("^" + this.name + "-");
