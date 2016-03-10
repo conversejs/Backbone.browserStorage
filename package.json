@@ -18,6 +18,7 @@
   },
   "keywords": [
     "backbone",
+    "browserStorage",
     "localStorage",
     "local",
     "sessionStorage",
@@ -26,7 +27,7 @@
     "cache",
     "sync"
   ],
-  "main": "./backbone.sessionStorage.js",
+  "main": "./backbone.browserStorage.js",
   "engines": {
     "node": "*"
   }
