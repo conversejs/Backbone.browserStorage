@@ -1,4 +1,4 @@
-# Backbone localStorage and sessionStorage Adapter 0.0.1
+# Backbone localStorage and sessionStorage adapter
 
 A localStorage and sessionStorage adapter for Backbone.
 It's a drop-in replacement for Backbone.Sync() to handle saving to the browser's browserStorage or sessionStorage database.
