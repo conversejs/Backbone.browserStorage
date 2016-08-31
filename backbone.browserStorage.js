@@ -157,11 +157,9 @@ var _extension = {
   _clear: function() {
     var local = this.store, itemRe;
 
-    if (typeof this.name.startsWith === "function" && this.name.startsWith('+')) {
-      itemRe = new RegExp("^\\" + this.name + "-");
-    } else {
-      itemRe = new RegExp("^" + this.name + "-");
-    }
+    // Escape special regex characters in id.
+    itemRe = new RegExp("^" + this.name.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&") + "-");
+    
     // Remove id-tracking item (e.g., "foo").
     local.removeItem(this.name);
 
