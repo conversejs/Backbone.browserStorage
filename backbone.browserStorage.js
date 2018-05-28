@@ -8,16 +8,11 @@
     if (typeof exports === 'object' && typeof require === 'function') {
         module.exports = factory(require("backbone"), require('underscore'));
     } else if (typeof define === "function" && define.amd) {
-        // AMD. Register as an anonymous module.
-        define(["backbone", "underscore"], function(Backbone, _) {
-            // Use global variables if the locals are undefined.
-            return factory(Backbone || root.Backbone, _ || root._);
-        });
+        define(["backbone", "underscore", "backbone.indexeddb"], factory)
     } else {
-        factory(Backbone, _);
+        factory(Backbone, _, indexedDBSync);
     }
-}(this, function(Backbone, _) {
-
+}(this, function(Backbone, _, indexedDBSync) {
     // A simple module to replace `Backbone.sync` with *browser storage*-based
     // persistence. Models are given GUIDS, and saved into a JSON object. Simple
     // as that.
@@ -52,8 +47,12 @@
             throw "Backbone.browserStorage: Environment does not support localStorage.";
         } else if (type === 'session' && !window.sessionStorage ) {
             throw "Backbone.browserStorage: Environment does not support sessionStorage.";
+        } else if (type === 'indexeddb' && !window.indexedDB) {
+            throw "Backbone.browserStorage: Environment does not support IndexedDB.";
         }
         this.name = name;
+        this.type = type;
+
         this.serializer = serializer || {
             serialize: function(item) {
                 return _.isObject(item) ? JSON.stringify(item) : item;
@@ -67,23 +66,34 @@
             this.store = window.sessionStorage;
         } else if (type === 'local') {
             this.store = window.localStorage;
+        } else if (type === 'indexeddb') {
+            this.store = undefined;
+            return this;
         } else {
             throw "Backbone.browserStorage: No storage type was specified";
         }
         _store = this.store.getItem(this.name);
         this.records = (_store && _store.split(",")) || [];
+        return this;
     }
 
     // Our Store is represented by a single JS object in *localStorage* or *sessionStorage*.
     // Create it with a meaningful name, like the name you'd give a table.
     Backbone.BrowserStorage = {
-        local (name, serializer) {
+        local: function (name, serializer) {
             return _browserStorage.bind(this, name, serializer, 'local')();
         },
 
-        session (name, serializer) {
+        session: function (name, serializer) {
             return _browserStorage.bind(this, name, serializer, 'session')();
         },
+
+        indexeddb: function (name, database) {
+            const storage =  _browserStorage.bind(this, name, null, 'indexeddb')();
+            storage.database = database;
+            storage.storeName = name;
+            return storage;
+        }
     };
 
     // The browser's local and session stores will be extended with this obj.
@@ -190,36 +200,36 @@
     // localSync delegate to the model or collection's
     // *browserStorage* property, which should be an instance of `Store`.
     // window.Store.sync and Backbone.localSync is deprecated, use Backbone.BrowserStorage.sync instead
-    Backbone.BrowserStorage.sync = Backbone.localSync = function(method, model, options) {
-    var store = model.browserStorage || model.collection.browserStorage;
+    Backbone.BrowserStorage.sync = Backbone.localSync = function (method, model, options) {
+        var store = model.browserStorage || model.collection.browserStorage;
 
-    var resp, errorMessage;
-    //If $ is having Deferred - use it.
-    var syncDfd = Backbone.$ ?
-        (Backbone.$.Deferred && Backbone.$.Deferred()) :
-        (Backbone.Deferred && Backbone.Deferred());
+        var resp, errorMessage;
+        //If $ is having Deferred - use it.
+        var syncDfd = Backbone.$ ?
+            (Backbone.$.Deferred && Backbone.$.Deferred()) :
+            (Backbone.Deferred && Backbone.Deferred());
 
-    try {
-
-        switch (method) {
-            case "read":
-                resp = model.id !== undefined ? store.find(model) : store.findAll();
-                break;
-            case "create":
-                resp = store.create(model);
-                break;
-            case "update":
-                resp = store.update(model);
-                break;
-            case "delete":
-                resp = store.destroy(model);
-                break;
-            }
+        try {
+            switch (method) {
+                case "read":
+                    resp = model.id !== undefined ? store.find(model) : store.findAll();
+                    break;
+                case "create":
+                    resp = store.create(model);
+                    break;
+                case "update":
+                    resp = store.update(model);
+                    break;
+                case "delete":
+                    resp = store.destroy(model);
+                    break;
+                }
         } catch(error) {
-            if (error.code === 22 && store._storageSize() === 0)
-            errorMessage = "Private browsing is unsupported";
-            else
-            errorMessage = error.message;
+            if (error.code === 22 && store._storageSize() === 0) {
+                errorMessage = "Private browsing is unsupported";
+            } else {
+                errorMessage = error.message;
+            }
         }
 
         if (resp) {
@@ -233,10 +243,8 @@
             if (syncDfd) {
                 syncDfd.resolve(resp);
             }
-
         } else {
-            errorMessage = errorMessage ? errorMessage
-                                        : "Record Not Found";
+            errorMessage = errorMessage ? errorMessage : "Record Not Found";
             if (options && options.error) {
                 if (Backbone.VERSION === "0.9.10") {
                     options.error(model, errorMessage, options);
@@ -248,7 +256,6 @@
                 syncDfd.reject(errorMessage);
             }
         }
-
         // add compatibility with $.ajax
         // always execute callback for success and error
         if (options && options.complete) {
@@ -260,8 +267,13 @@
     Backbone.ajaxSync = Backbone.sync;
 
     Backbone.getSyncMethod = function(model) {
-        if (model.browserStorage || (model.collection && model.collection.browserStorage)) {
-            return Backbone.localSync;
+        const browserStorage = model.browserStorage || (model.collection && model.collection.browserStorage);
+        if (browserStorage) {
+            if (_.includes(['session', 'local'], browserStorage.type)) {
+                return Backbone.localSync;
+            } else if (browserStorage.type === 'indexeddb') {
+                return indexedDBSync
+            }
         }
         return Backbone.ajaxSync;
     };
