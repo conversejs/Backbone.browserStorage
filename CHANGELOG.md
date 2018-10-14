@@ -2,8 +2,8 @@
 
 ## 0.0.4 (Unreleased)
 
-- Send model attributes to `success` handler, so that Backbone can properly
-  populate the `model.changed` map. [jcbrand]
+- Don't return boolean on `update` and `create`, otherwise the `model.changed`
+  attribute isn't correctly populated when a model is saved. [jcbrand]
 
 ## 0.0.3 (2016-08-31)
 

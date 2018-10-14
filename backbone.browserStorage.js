@@ -103,7 +103,7 @@ var _extension = {
     this.store.setItem(this._itemName(model.id), this.serializer.serialize(model));
     this.records.push(model.id.toString());
     this.save();
-    return this.find(model) !== false;
+    return this.find(model);
   },
 
   // Update a model by replacing its copy in `this.data`.
@@ -114,7 +114,7 @@ var _extension = {
       this.records.push(modelId);
       this.save();
     }
-    return this.find(model) !== false;
+    return this.find(model);
   },
 
   // Retrieve a model from `this.data` by id.
@@ -225,7 +225,7 @@ Backbone.BrowserStorage.sync = Backbone.localSync = function(method, model, opti
 
   if (resp) {
     if (options && options.success) {
-        options.success(model.attributes, options);
+        options.success(resp);
     }
     if (syncDfd) {
         syncDfd.resolve(resp);
