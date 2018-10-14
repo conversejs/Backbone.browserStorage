@@ -225,7 +225,7 @@ Backbone.BrowserStorage.sync = Backbone.localSync = function(method, model, opti
 
   if (resp) {
     if (options && options.success) {
-        options.success(model.attributes, resp, options);
+        options.success(model.attributes, options);
     }
     if (syncDfd) {
         syncDfd.resolve(resp);
@@ -233,7 +233,7 @@ Backbone.BrowserStorage.sync = Backbone.localSync = function(method, model, opti
   } else {
     errorMessage = errorMessage ? errorMessage : "Record Not Found";
     if (options && options.error) {
-        options.error(model.attributes, errorMessage, options);
+        options.error(errorMessage);
     }
     if (syncDfd) {
         syncDfd.reject(errorMessage);
