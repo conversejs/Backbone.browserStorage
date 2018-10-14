@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.4 (Unreleased)
+
+- Send model attributes to `success` handler, so that Backbone can properly
+  populate the `model.changed` map. [jcbrand]
+
 ## 0.0.3 (2016-08-31)
 
 - #1 Fix typo in main. Fixes webpack failing to load the module [sww314]

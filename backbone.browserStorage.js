@@ -225,29 +225,19 @@ Backbone.BrowserStorage.sync = Backbone.localSync = function(method, model, opti
 
   if (resp) {
     if (options && options.success) {
-      if (Backbone.VERSION === "0.9.10") {
-        options.success(model, resp, options);
-      } else {
-        options.success(resp);
-      }
+        options.success(model.attributes, resp, options);
     }
     if (syncDfd) {
-      syncDfd.resolve(resp);
+        syncDfd.resolve(resp);
     }
-
   } else {
-    errorMessage = errorMessage ? errorMessage
-                                : "Record Not Found";
-
-    if (options && options.error)
-      if (Backbone.VERSION === "0.9.10") {
-        options.error(model, errorMessage, options);
-      } else {
-        options.error(errorMessage);
-      }
-
-    if (syncDfd)
-      syncDfd.reject(errorMessage);
+    errorMessage = errorMessage ? errorMessage : "Record Not Found";
+    if (options && options.error) {
+        options.error(model.attributes, errorMessage, options);
+    }
+    if (syncDfd) {
+        syncDfd.reject(errorMessage);
+    }
   }
 
   // add compatibility with $.ajax
