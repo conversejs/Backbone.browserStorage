@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.0.4 (Unreleased)
+## 0.0.4 (2018-10-21)
 
 - Don't return boolean on `update` and `create`, otherwise the `model.changed`
   attribute isn't correctly populated when a model is saved. [jcbrand]

@@ -1,7 +1,7 @@
 {
-  "author": "JC Brand (https://opkode.com) fork of backbone.localStorage",
+  "author": "JC Brand",
   "name": "backbone.browserStorage",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "repository": {
     "type": "git",
     "url": "git://github.com/jcbrand/Backbone.browserStorage.git"
@@ -14,7 +14,6 @@
     "uglify-js": "~1.2.6",
     "mocha-phantomjs": "~1.1.2",
     "browserify": "~2.x.x",
-    "jquery": "~2.1.0"
   },
   "keywords": [
     "backbone",
