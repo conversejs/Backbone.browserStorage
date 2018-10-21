@@ -13,7 +13,7 @@
   "devDependencies": {
     "uglify-js": "~1.2.6",
     "mocha-phantomjs": "~1.1.2",
-    "browserify": "~2.x.x",
+    "browserify": "~2.x.x"
   },
   "keywords": [
     "backbone",
