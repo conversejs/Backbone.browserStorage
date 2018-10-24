@@ -1,6 +1,6 @@
 /**
  * Backbone localStorage and sessionStorage Adapter
- * Version 0.0.3
+ * Version 0.0.4
  *
  * https://github.com/jcbrand/Backbone.browserStorage
  */
@@ -55,11 +55,11 @@ function _browserStorage (name, serializer, type) {
     this.name = name;
     this.serializer = serializer || {
         serialize: function(item) {
-        return _.isObject(item) ? JSON.stringify(item) : item;
+            return _.isObject(item) ? JSON.stringify(item) : item;
         },
         // fix for "illegal access" error on Android when JSON.parse is passed null
         deserialize: function (data) {
-        return data && JSON.parse(data);
+            return data && JSON.parse(data);
         }
     };
 
@@ -95,10 +95,10 @@ var _extension = {
 
   // Add a model, giving it a (hopefully)-unique GUID, if it doesn't already
   // have an id of it's own.
-  create: function(model) {
+  create: function(model, options) {
     if (!model.id) {
       model.id = guid();
-      model.set(model.idAttribute, model.id);
+      model.set(model.idAttribute, model.id, options);
     }
     this.store.setItem(this._itemName(model.id), this.serializer.serialize(model));
     this.records.push(model.id.toString());
@@ -206,13 +206,13 @@ Backbone.BrowserStorage.sync = Backbone.localSync = function(method, model, opti
         resp = model.id !== undefined ? store.find(model) : store.findAll();
         break;
       case "create":
-        resp = store.create(model);
+        resp = store.create(model, options);
         break;
       case "update":
-        resp = store.update(model);
+        resp = store.update(model, options);
         break;
       case "delete":
-        resp = store.destroy(model);
+        resp = store.destroy(model, options);
         break;
     }
 
@@ -225,7 +225,7 @@ Backbone.BrowserStorage.sync = Backbone.localSync = function(method, model, opti
 
   if (resp) {
     if (options && options.success) {
-        options.success(resp);
+        options.success(resp, options);
     }
     if (syncDfd) {
         syncDfd.resolve(resp);

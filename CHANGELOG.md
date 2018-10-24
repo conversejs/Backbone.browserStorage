@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.5 (2018-10-21)
+
+- Pass along the `options` map. Otherwise events fire even though
+  `{silent: true}` was passed to the `Collection.prototype.create` method.
+
 ## 0.0.4 (2018-10-21)
 
 - Don't return boolean on `update` and `create`, otherwise the `model.changed`
