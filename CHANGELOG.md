@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.0.5 (2018-10-21)
+## 0.0.5 (2018-10-28)
 
 - Pass along the `options` map. Otherwise events fire even though
   `{silent: true}` was passed to the `Collection.prototype.create` method.

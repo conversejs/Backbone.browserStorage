@@ -1,6 +1,6 @@
 /**
  * Backbone localStorage and sessionStorage Adapter
- * Version 0.0.4
+ * Version 0.0.5
  *
  * https://github.com/jcbrand/Backbone.browserStorage
  */
