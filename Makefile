@@ -4,6 +4,7 @@ ESLINT		  	?= ./node_modules/.bin/eslint
 HTTPSERVE	   	?= ./node_modules/.bin/http-server
 HTTPSERVE_PORT	?= 8000
 BIN = 			./node_modules/.bin
+BROWSERS		?= Chrome
 
 clean:
 	rm -rf node_modules stamp-npm
@@ -23,7 +24,7 @@ serve:
 
 .PHONY: check
 check: stamp-npm eslint
-	$(KARMA) start --single-run
+	$(KARMA) start --single-run --browsers $(BROWSERS)
 
 # Get version number from package.json, need this for tagging.
 version = $(shell node -e "console.log(JSON.parse(require('fs').readFileSync('package.json')).version)")
