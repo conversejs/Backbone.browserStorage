@@ -4,21 +4,9 @@
  *
  * https://github.com/jcbrand/Backbone.browserStorage
  */
+import * as _ from "lodash";
+import Backbone from "backbone";
 
-/* global module, Backbone, _ */
-(function (root, factory) {
-  if (typeof exports === 'object' && typeof require === 'function') {
-    module.exports = factory(require("backbone"), require('underscore'));
-  } else if (typeof define === "function" && define.amd) {
-    // AMD. Register as an anonymous module.
-    define(["backbone", "underscore"], function(Backbone, _) {
-      // Use global variables if the locals are undefined.
-      return factory(Backbone || root.Backbone, _ || root._);
-    });
-  } else {
-    factory(Backbone, _);
-  }
-}(this, function(Backbone, _) {
 // A simple module to replace `Backbone.sync` with *browser storage*-based
 // persistence. Models are given GUIDS, and saved into a JSON object. Simple
 // as that.
@@ -28,12 +16,12 @@
 
 // Generate four random hex digits.
 function S4() {
-   return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+  return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
 }
 
 // Generate a pseudo-GUID by concatenating random hexadecimal.
 function guid() {
-   return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
+  return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
 }
 
 function contains(array, item) {
@@ -268,5 +256,4 @@ Backbone.sync = function(method, model, options) {
   return Backbone.getSyncMethod(model).apply(this, [method, model, options]);
 };
 
-return Backbone.BrowserStorage;
-}));
+export default Backbone.BrowserStorage;
