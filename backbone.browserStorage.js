@@ -4,7 +4,7 @@
  *
  * https://github.com/jcbrand/Backbone.browserStorage
  */
-import { isObject, result } from 'lodash';
+import { extend, includes, isObject, result } from 'lodash';
 import Backbone from "backbone";
 
 
@@ -23,21 +23,6 @@ function S4() {
 // Generate a pseudo-GUID by concatenating random hexadecimal.
 function guid() {
    return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
-}
-
-function contains(array, item) {
-    let i = array.length;
-    while (i--) if (array[i] === item) return true;
-    return false;
-}
-
-function extend(obj, props) {
-  for (const key in props) {
-      if (Object.prototype.hasOwnProperty.call(props, key)) {
-        obj[key] = props[key];
-      }
-  }
-  return obj;
 }
 
 function _browserStorage (name, serializer, type) {
@@ -98,17 +83,14 @@ const _extension = {
             model.id = guid();
             model.set(model.idAttribute, model.id, options);
         }
-        this.store.setItem(this._itemName(model.id), this.serializer.serialize(model));
-        this.records.push(model.id.toString());
-        this.save();
-        return this.find(model);
+        return this.update(model, options);
     },
 
     // Update a model by replacing its copy in `this.data`.
     update: function (model) {
         this.store.setItem(this._itemName(model.id), this.serializer.serialize(model));
         const modelId = model.id.toString();
-        if (!contains(this.records, modelId)) {
+        if (!includes(this.records, modelId)) {
             this.records.push(modelId);
             this.save();
         }
@@ -179,6 +161,7 @@ const _extension = {
 
 extend(Backbone.BrowserStorage.session.prototype, _extension);
 extend(Backbone.BrowserStorage.local.prototype, _extension);
+
 
 // localSync delegate to the model or collection's
 // *browserStorage* property, which should be an instance of `Store`.
