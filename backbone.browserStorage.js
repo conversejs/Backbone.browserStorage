@@ -4,9 +4,9 @@
  *
  * https://github.com/jcbrand/Backbone.browserStorage
  */
-import { extend, includes, isObject, result } from 'lodash';
+import * as localForage from "localforage";
+import { after, extend, includes, isObject, isString, partial, result } from 'lodash';
 import Backbone from "backbone";
-
 
 // A simple module to replace `Backbone.sync` with *browser storage*-based
 // persistence. Models are given GUIDS, and saved into a JSON object. Simple
@@ -25,116 +25,160 @@ function guid() {
    return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
 }
 
-function _browserStorage (name, serializer, type) {
-    if (type === 'local' && !window.localStorage ) {
-        throw new Error("Backbone.browserStorage: Environment does not support localStorage.");
-    } else if (type === 'session' && !window.sessionStorage ) {
-        throw new Error("Backbone.browserStorage: Environment does not support sessionStorage.");
+const SERIALIZER = {
+    serialize (item) {
+        return isObject(item) ? JSON.stringify(item) : item;
+    },
+    deserialize (data) {
+        return isString(data) ? JSON.parse(data): data;
     }
-    this.name = name;
-    this.serializer = serializer || {
-        serialize: function (item) {
-            return isObject(item) ? JSON.stringify(item) : item;
-        },
-        // fix for "illegal access" error on Android when JSON.parse is passed null
-        deserialize: function (data) {
-            return data && JSON.parse(data);
-        }
-    };
-
-    if (type === 'session') {
-        this.store = window.sessionStorage;
-    } else if (type === 'local') {
-        this.store = window.localStorage;
-    } else {
-        throw new Error("Backbone.browserStorage: No storage type was specified");
-    }
-    const _store = this.store.getItem(this.name);
-    this.records = (_store && _store.split(",")) || [];
 }
 
 function getStore(model) {
     return result(model, 'browserStorage') || result(model.collection, 'browserStorage');
 }
 
-// Our Store is represented by a single JS object in *localStorage* or *sessionStorage*.
-// Create it with a meaningful name, like the name you'd give a table.
-Backbone.BrowserStorage = {
-    local: function (name, serializer) {
-        return _browserStorage.bind(this, name, serializer, 'local')();
-    },
-    session: function (name, serializer) {
-        return _browserStorage.bind(this, name, serializer, 'session')();
+
+class BrowserStorage {
+
+    constructor (name, type) {
+        if (type === 'local' && !window.localStorage ) {
+            throw new Error("Backbone.browserStorage: Environment does not support localStorage.");
+        } else if (type === 'session' && !window.sessionStorage ) {
+            throw new Error("Backbone.browserStorage: Environment does not support sessionStorage.");
+        }
+        this.type = type;
+        this.name = name;
+        this.serializer = SERIALIZER;
+
+        if (type === 'indexedDB') {
+            this.store = localForage;
+            // XXX: we don't set a `records` attr
+            return;
+        } else if (type === 'session') {
+            this.store = window.sessionStorage;
+        } else if (type === 'local') {
+            this.store = window.localStorage;
+        } else {
+            throw new Error("Backbone.browserStorage: No storage type was specified");
+        }
+        const _store = this.store.getItem(this.name);
+        this.records = (_store && _store.split(",")) || [];
     }
-};
 
-// The browser's local and session stores will be extended with this obj.
-const _extension = {
+    async sync (method, model, options) {
+        let resp, errorMessage;
+        try {
+            switch (method) {
+                case "read":
+                    if (model.id !== undefined) {
+                        resp = await this.find(model);
+                    } else {
+                        resp = await this.findAll();
+                    }
+                    break;
+                case "create":
+                    resp = this.create(model, options);
+                    break;
+                case "update":
+                    resp = await this.update(model, options);
+                    break;
+                case "delete":
+                    resp = await this.destroy(model, options);
+                    break;
+            }
+        } catch (error) {
+            if (error.code === 22 && this.getStorageSize() === 0) {
+                errorMessage = "Private browsing is unsupported";
+            } else {
+                errorMessage = error.message;
+            }
+        }
+        if (resp) {
+            if (options && options.success) {
+                options.success(resp, options);
+            }
+        } else {
+            errorMessage = errorMessage ? errorMessage : "Record Not Found";
+            if (options && options.error) {
+                options.error(errorMessage);
+            }
+        }
+    }
 
-    // Save the current state of the **Store**
-    save: function () {
-        this.store.setItem(this.name, this.records.join(","));
-    },
+    updateCollectionReferences (model) {
+        const collection = model.collection;
+        if (!collection) {
+            return;
+        }
+        const ids = collection.map(m => this.getItemName(m.id));
+        this.store.setItem(this.store.name, ids);
+    }
 
-    // Add a model, giving it a (hopefully)-unique GUID, if it doesn't already
-    // have an id of it's own.
-    create: function (model, options) {
+    async save (model) {
+        const key = this.getItemName(model.id);
+        // XXX: previously we used `this.serializer.serialize(model)`
+        const data = await Promise.resolve().then(() => this.store.setItem(key, model.toJSON()));
+        this.updateCollectionReferences(model);
+        return data;
+    }
+
+    create (model, options) {
+        /* Add a model, giving it a (hopefully)-unique GUID, if it doesn't already
+         * have an id of it's own.
+         */
         if (!model.id) {
             model.id = guid();
             model.set(model.idAttribute, model.id, options);
         }
         return this.update(model, options);
-    },
+    }
 
-    // Update a model by replacing its copy in `this.data`.
-    update: function (model) {
-        this.store.setItem(this._itemName(model.id), this.serializer.serialize(model));
-        const modelId = model.id.toString();
-        if (!includes(this.records, modelId)) {
-            this.records.push(modelId);
-            this.save();
-        }
-        return this.find(model);
-    },
+    update (model) {
+        return this.save(model);
+    }
 
-    // Retrieve a model from `this.data` by id.
-    find: function (model) {
-        return this.serializer.deserialize(this.store.getItem(this._itemName(model.id)));
-    },
+    async find (model) {
+        const data = await Promise.resolve().then(() => this.store.getItem(this.getItemName(model.id)));
+        return this.serializer.deserialize(data);
+    }
 
-    // Return the array of all models currently in storage.
-    findAll: function () {
-        const result = [];
-        for (let i = 0, id, data; i < this.records.length; i++) {
-            id = this.records[i];
-            data = this.serializer.deserialize(this.store.getItem(this._itemName(id)));
-            if (data !== null) result.push(data);
-        }
-        return result;
-    },
-
-    // Delete a model from `this.data`, returning it.
-    destroy: function (model) {
-        this.store.removeItem(this._itemName(model.id));
-        const modelId = model.id.toString();
-        for (let i = 0, id; i < this.records.length; i++) {
-            if (this.records[i] === modelId) {
-                this.records.splice(i, 1);
+    async findAll () {
+        /* Return the array of all models currently in storage.
+         */
+        if (includes(['session', 'local'], this.type)) {
+            const result = [];
+            for (let i = 0, id, data; i < this.records.length; i++) {
+                id = this.records[i];
+                data = this.serializer.deserialize(this.store.getItem(this.getItemName(id)));
+                if (data !== null) {
+                    result.push(data);
+                }
+            }
+            return result;
+        } else {
+            const { err, data } = await this.store.getItem(this.name);
+            if (!err && data && data.length) {
+                const promises = [];
+                for (let i = 0; i < data.length; ++i) {
+                    promises.append(this.store.getItem(data[i]).then(model => (data[i] = model)));
+                }
+                await Promise.all(promises);
+                return data;
+            } else {
+                return [];
             }
         }
-        this.save();
+    }
+
+    async destroy (model, options) {
+        await Promise.resolve().then(() => this.store.removeItem(this.getItemName(model.id)));
+        this.updateCollectionReferences(model);
         return model;
-    },
+    }
 
-    browserStorage: function () {
-        return {
-            session: sessionStorage,
-            local: localStorage
-        };
-    },
-
-    // Clear browserStorage for specific collection.
-    _clear: function () {
+    _clear () {
+        /* Clear browserStorage for specific collection. */
         const local = this.store;
         // Escape special regex characters in id.
         const itemRe = new RegExp("^" + this.name.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&") + "-");
@@ -147,77 +191,25 @@ const _extension = {
             }
         }
         this.records.length = 0;
-    },
+    }
 
-    // Size of browserStorage.
-    _storageSize: function () {
+    getStorageSize () {
         return this.store.length;
-    },
+    }
 
-    _itemName: function (id) {
+    getItemName (id) {
         return this.name+"-"+id;
     }
-};
+}
 
-extend(Backbone.BrowserStorage.session.prototype, _extension);
-extend(Backbone.BrowserStorage.local.prototype, _extension);
-
-
-// localSync delegate to the model or collection's
-// *browserStorage* property, which should be an instance of `Store`.
-// window.Store.sync and Backbone.localSync is deprecated, use Backbone.BrowserStorage.sync instead
-Backbone.BrowserStorage.sync = Backbone.localSync = function (method, model, options) {
-    const store = getStore(model);
-    let resp, errorMessage;
-    try {
-        switch (method) {
-            case "read":
-                resp = model.id !== undefined ? store.find(model) : store.findAll();
-                break;
-            case "create":
-                resp = store.create(model, options);
-                break;
-            case "update":
-                resp = store.update(model, options);
-                break;
-            case "delete":
-                resp = store.destroy(model, options);
-                break;
-        }
-    } catch (error) {
-        if (error.code === 22 && store._storageSize() === 0) {
-            errorMessage = "Private browsing is unsupported";
-        } else {
-            errorMessage = error.message;
-        }
-    }
-
-    if (resp) {
-        if (options && options.success) {
-            options.success(resp, options);
-        }
-    } else {
-        errorMessage = errorMessage ? errorMessage : "Record Not Found";
-        if (options && options.error) {
-            options.error(errorMessage);
-        }
-    }
-
-    // add compatibility with $.ajax
-    // always execute callback for success and error
-    if (options && options.complete) {
-        options.complete(resp);
-    }
-};
-
+Backbone.BrowserStorage = BrowserStorage;
 Backbone.ajaxSync = Backbone.sync;
 
 Backbone.getSyncMethod = function (model) {
-    return getStore(model) ? Backbone.localSync : Backbone.ajaxSync;
+    const store = getStore(model);
+    return store ? store.sync : Backbone.ajaxSync;
 };
 
-// Override 'Backbone.sync' to default to localSync,
-// the original 'Backbone.sync' is still available in 'Backbone.ajaxSync'
 Backbone.sync = function (method, model, options) {
     return Backbone.getSyncMethod(model).apply(this, [method, model, options]);
 };
