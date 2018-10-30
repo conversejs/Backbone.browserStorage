@@ -34,23 +34,22 @@ module.exports = function(config) {
     webpack: {
       devtool: 'inline-source-map',
       module: {
-        loaders: [
-          {
-            test: /\.js$/,
-            exclude: /node_modules/,
-            loader: 'babel-loader',
-            options: {
-              presets: ['es2015']
-            }
-          },
-          {
-            test: /\.js$/,
-            include: /src\/.*\.js$/,
-            exclude: /node_modules/,
-            loader: 'istanbul-instrumenter-loader',
-            enforce: 'post'
-          }
-        ]
+         rules: [{
+           test: /\.js$/,
+           exclude: /(node_modules|test)/,
+           use: {
+             loader: 'babel-loader',
+             options: {
+               presets: [
+                 ["@babel/preset-env", {
+                     "targets": {
+                         "browsers": [">1%", "not ie 11", "not op_mini all"]
+                     }
+                 }]
+               ]
+             }
+           }
+         }]
       },
       output: {
         path: path.resolve('test'),

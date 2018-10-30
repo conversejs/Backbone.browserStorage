@@ -1,47 +1,43 @@
+/*global path, __dirname, module, process */
 'use strict';
 
 const path = require('path');
-const _ = require('underscore');
+const _ = require('lodash');
 
-
-const isProd = _.reduce(process.argv, function(memo, arg) {
-  return memo || arg === '--production' || arg === '-p';
-}, false);
-
-module.exports = {
-  entry: {
-    app: ['./backbone.browserStorage.js']
-  },
-  externals: {
-    backbone: {
-      amd: 'backbone',
-      commonjs: 'backbone',
-      commonjs2: 'backbone',
-      root: 'Backbone'
-    },
-    underscore: {
-      amd: 'underscore',
-      commonjs: 'underscore',
-      commonjs2: 'underscore',
-      root: '_'
-    }
-  },
-  module: {
-    loaders: [
-      {
-        test: /\.js$/,
-        exclude: /node_modules/,
-        loader: 'babel-loader',
-        query: {
-          presets: ['es2015']
+const config = {
+    entry: path.resolve(__dirname, 'backbone.browserStorage.js'),
+    externals: {
+        backbone: {
+            amd: 'backbone',
+            commonjs: 'backbone',
+            commonjs2: 'backbone',
+            root: 'Backbone'
+        },
+        lodash: {
+            amd: 'lodash',
+            commonjs: 'lodash',
+            commonjs2: 'lodash',
+            root: '_'
+        },
+        module: {
+            rules: [{
+                test: /\.js$/,
+                exclude: /(node_modules|test)/,
+                use: {
+                    loader: 'babel-loader',
+                    options: {
+                        presets: [
+                            ["@babel/preset-env", {
+                                "targets": {
+                                    "browsers": [">1%", "not ie 11", "not op_mini all"]
+                                }
+                            }]
+                        ]
+                    }
+                }
+        }]
         }
-      }
-    ]
-  },
-  output: {
-    filename: `backbone.browserStorage${isProd ? '.min' : ''}.js`,
-    path: path.resolve('build'),
-    library: 'backbone.browserStorage',
-    libraryTarget: 'umd'
-  }
-};
+    }
+}
+
+module.exports = config;
