@@ -183,11 +183,6 @@ Backbone.BrowserStorage.sync = Backbone.localSync = function (method, model, opt
     const store = model.browserStorage || model.collection.browserStorage;
 
     let resp, errorMessage;
-    //If $ is having Deferred - use it.
-    const syncDfd = Backbone.$ ?
-        (Backbone.$.Deferred && Backbone.$.Deferred()) :
-        (Backbone.Deferred && Backbone.Deferred());
-
     try {
         switch (method) {
             case "read":
@@ -215,16 +210,10 @@ Backbone.BrowserStorage.sync = Backbone.localSync = function (method, model, opt
         if (options && options.success) {
             options.success(resp, options);
         }
-        if (syncDfd) {
-            syncDfd.resolve(resp);
-        }
     } else {
         errorMessage = errorMessage ? errorMessage : "Record Not Found";
         if (options && options.error) {
             options.error(errorMessage);
-        }
-        if (syncDfd) {
-            syncDfd.reject(errorMessage);
         }
     }
 
@@ -233,7 +222,6 @@ Backbone.BrowserStorage.sync = Backbone.localSync = function (method, model, opt
     if (options && options.complete) {
         options.complete(resp);
     }
-    return syncDfd && syncDfd.promise();
 };
 
 Backbone.ajaxSync = Backbone.sync;
