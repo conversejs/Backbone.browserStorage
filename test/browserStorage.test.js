@@ -1,4 +1,10 @@
-/*global Backbone, assert, after, before, _ */
+import Backbone from 'backbone';
+import BrowserStorage from 'backbone.browserStorage';
+import { _ } from 'underscore';
+import { assert } from 'chai';
+
+/*global after, before */
+
 
 describe("Backbone.browserStorage", function () {
 
@@ -125,11 +131,9 @@ describe("Backbone.browserStorage", function () {
                     it("should be saved in localstorage by new id", function () {
                         assert.isNotNull(window.localStorage.getItem('collectionStore-1'));
                     });
-
                 });
-
-
             });
+
 
             describe("destroy", function () {
                 let beforeFetchLength, afterFetchLength;
@@ -185,11 +189,8 @@ describe("Backbone.browserStorage", function () {
                 it("should have used the custom `idAttribute`", function () {
                     assert.equal(collection2.first().id, collection2.first().get("_id"));
                 });
-
             });
-
         });
-
     });
 
     describe("on a Model", function () {
@@ -349,11 +350,10 @@ describe("Without Backbone.browserStorage", function () {
 
     describe("on a Model", function () {
         const Model = Backbone.Model.extend(),
-                model = new Model();
+              model = new Model();
 
         it("should use `ajaxSync`", function () {
             assert.equal(Backbone.getSyncMethod(model), Backbone.ajaxSync);
         });
     });
-
 });

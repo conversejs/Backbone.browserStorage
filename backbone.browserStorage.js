@@ -71,8 +71,12 @@ function _browserStorage (name, serializer, type) {
 // Our Store is represented by a single JS object in *localStorage* or *sessionStorage*.
 // Create it with a meaningful name, like the name you'd give a table.
 Backbone.BrowserStorage = {
-    'local': (name, serializer) => _browserStorage(name, serializer, 'local')(),
-    'session': (name, serializer) => _browserStorage(name, serializer, 'session')()
+    local: function (name, serializer) {
+        return _browserStorage.bind(this, name, serializer, 'local')();
+    },
+    session: function (name, serializer) {
+        return _browserStorage.bind(this, name, serializer, 'session')();
+    }
 };
 
 // The browser's local and session stores will be extended with this obj.
