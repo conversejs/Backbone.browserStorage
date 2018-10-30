@@ -3,6 +3,9 @@
 A localStorage and sessionStorage adapter for Backbone.
 It's a drop-in replacement for Backbone.Sync() to handle saving to the browser's browserStorage or sessionStorage database.
 
+[![XMPP Chat](https://inverse.chat/badge.svg?room=discuss@conference.conversejs.org)](https://inverse.chat/#converse/room?jid=discuss@conference.conversejs.org)
+[![Build Status](https://travis-ci.org/conversejs/Backbone.browserStorage.svg?branch=master)](https://travis-ci.org/conversejs/Backbone.browserStorage)
+
 ## Usage
 
 Include Backbone.browserStorage after having included Backbone.js:
