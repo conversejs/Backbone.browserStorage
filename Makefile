@@ -7,9 +7,6 @@ BIN = 			./node_modules/.bin
 clean:
 	rm -rf node_modules
 
-minify:
-	$(BIN)/uglifyjs -o backbone.localStorage-min.js backbone.localStorage.js
-
 stamp-npm: package.json package-lock.json
 	npm install
 	touch stamp-npm
