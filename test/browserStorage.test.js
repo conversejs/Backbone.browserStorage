@@ -2,6 +2,7 @@ import Backbone from 'backbone';
 import BrowserStorage from 'backbone.browserStorage';
 import { _ } from 'underscore';
 import { assert } from 'chai';
+import root from 'window-or-global';
 
 /*global after, before */
 
@@ -76,7 +77,7 @@ describe("Backbone.browserStorage", function () {
             });
 
             it("should be saved to the localstorage", function () {
-                assert.isNotNull(window.localStorage.getItem('collectionStore'+'-'+model.id));
+                assert.isNotNull(root.localStorage.getItem('collectionStore'+'-'+model.id));
             });
 
         });
@@ -129,7 +130,7 @@ describe("Backbone.browserStorage", function () {
                     });
 
                     it("should be saved in localstorage by new id", function () {
-                        assert.isNotNull(window.localStorage.getItem('collectionStore-1'));
+                        assert.isNotNull(root.localStorage.getItem('collectionStore-1'));
                     });
                 });
             });
@@ -165,7 +166,6 @@ describe("Backbone.browserStorage", function () {
                 it("should have removed all items from the store", function () {
                     assert.equal(afterFetchLength, 0);
                 });
-
             });
 
             describe("with a different `idAttribute`", function () {
@@ -232,7 +232,7 @@ describe("Backbone.browserStorage", function () {
             });
 
             it("should be saved to the localstorage", function () {
-                assert.isNotNull(window.localStorage.getItem('modelStore'+'-'+model.id));
+                assert.isNotNull(root.localStorage.getItem('modelStore'+'-'+model.id));
             });
 
             describe("with new attributes", function () {
@@ -268,7 +268,6 @@ describe("Backbone.browserStorage", function () {
         });
 
         describe("destroy", function () {
-
             before(function () {
                 model.destroy();
             });
@@ -276,65 +275,8 @@ describe("Backbone.browserStorage", function () {
             it("should have removed the instance from the store", function () {
                 assert.lengthOf(Model.prototype.browserStorage.findAll(), 0);
             });
-
         });
-
     });
-
-    describe("Error handling", function () {
-
-        const Model = Backbone.Model.extend({
-            defaults: attributes,
-            browserStorage: new Backbone.BrowserStorage.local("modelStore")
-        });
-
-        describe("private browsing", function () {
-
-            const model = new Model(),
-                  oldSetItem = window.localStorage.setItem,
-                  oldStorageSize = model.browserStorage._storageSize;
-            let error;
-
-            before(function(done){
-                model.browserStorage._clear();
-
-                // Patch browser conditions for private error.
-                model.browserStorage._storageSize = function () { return 0; };
-                window.localStorage.setItem = function () {
-                    const error = new Error();
-                    error.code = DOMException.QUOTA_EXCEEDED_ERR;
-                    throw error;
-                };
-
-                model.save(attributes, {
-                    error: function(model, err){
-                        error = err;
-                        done();
-                    }
-                });
-            });
-
-            it("should return the error in the error callback", function () {
-                assert.equal(error, "Private browsing is unsupported");
-            });
-
-            it('should throw an error event', function(done){
-                model.on('error', function () {
-                    done();
-                });
-                model.save();
-            });
-
-            after(function () {
-                // Unwrap patches.
-                model.browserStorage._storageSize = oldStorageSize;
-                window.localStorage.setItem = oldSetItem;
-            });
-
-        });
-
-    });
-
 });
 
 describe("Without Backbone.browserStorage", function () {
