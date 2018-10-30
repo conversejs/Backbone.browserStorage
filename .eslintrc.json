@@ -34,6 +34,7 @@
         "lodash/preferred-alias": "off",
         "lodash/prefer-get": "off",
         "lodash/chaining": "off",
+        "lodash/import-scope": "off",
         "accessor-pairs": "error",
         "array-bracket-spacing": "off",
         "array-callback-return": "error",

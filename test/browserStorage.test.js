@@ -283,7 +283,7 @@ describe("Without Backbone.browserStorage", function () {
 
     describe("on a Collection", function () {
         const Collection = Backbone.Collection.extend(),
-                collection = new Collection();
+              collection = new Collection();
 
         it("should use `ajaxSync`", function () {
             assert.equal(Backbone.getSyncMethod(collection), Backbone.ajaxSync);

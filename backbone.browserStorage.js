@@ -4,7 +4,7 @@
  *
  * https://github.com/jcbrand/Backbone.browserStorage
  */
-import * as _ from "lodash";
+import { isObject, result } from 'lodash';
 import Backbone from "backbone";
 
 
@@ -49,7 +49,7 @@ function _browserStorage (name, serializer, type) {
     this.name = name;
     this.serializer = serializer || {
         serialize: function (item) {
-            return _.isObject(item) ? JSON.stringify(item) : item;
+            return isObject(item) ? JSON.stringify(item) : item;
         },
         // fix for "illegal access" error on Android when JSON.parse is passed null
         deserialize: function (data) {
@@ -66,6 +66,10 @@ function _browserStorage (name, serializer, type) {
     }
     const _store = this.store.getItem(this.name);
     this.records = (_store && _store.split(",")) || [];
+}
+
+function getStore(model) {
+    return result(model, 'browserStorage') || result(model.collection, 'browserStorage');
 }
 
 // Our Store is represented by a single JS object in *localStorage* or *sessionStorage*.
@@ -180,8 +184,7 @@ extend(Backbone.BrowserStorage.local.prototype, _extension);
 // *browserStorage* property, which should be an instance of `Store`.
 // window.Store.sync and Backbone.localSync is deprecated, use Backbone.BrowserStorage.sync instead
 Backbone.BrowserStorage.sync = Backbone.localSync = function (method, model, options) {
-    const store = model.browserStorage || model.collection.browserStorage;
-
+    const store = getStore(model);
     let resp, errorMessage;
     try {
         switch (method) {
@@ -227,10 +230,7 @@ Backbone.BrowserStorage.sync = Backbone.localSync = function (method, model, opt
 Backbone.ajaxSync = Backbone.sync;
 
 Backbone.getSyncMethod = function (model) {
-    if (model.browserStorage || (model.collection && model.collection.browserStorage)) {
-        return Backbone.localSync;
-    }
-    return Backbone.ajaxSync;
+    return getStore(model) ? Backbone.localSync : Backbone.ajaxSync;
 };
 
 // Override 'Backbone.sync' to default to localSync,
