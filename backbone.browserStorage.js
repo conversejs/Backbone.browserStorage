@@ -4,6 +4,8 @@
  *
  * https://github.com/jcbrand/Backbone.browserStorage
  */
+
+/* global module, Backbone, _ */
 (function (root, factory) {
   if (typeof exports === 'object' && typeof require === 'function') {
     module.exports = factory(require("backbone"), require('underscore'));
@@ -41,16 +43,20 @@ function contains(array, item) {
 }
 
 function extend(obj, props) {
-  for (var key in props) { obj[key] = props[key]; }
+  for (var key in props) {
+      if (Object.prototype.hasOwnProperty.call(props, key)) {
+        obj[key] = props[key];
+      }
+  }
   return obj;
 }
 
 function _browserStorage (name, serializer, type) {
     var _store;
     if (type === 'local' && !window.localStorage ) {
-        throw "Backbone.browserStorage: Environment does not support localStorage.";
+        throw new Error("Backbone.browserStorage: Environment does not support localStorage.");
     } else if (type === 'session' && !window.sessionStorage ) {
-        throw "Backbone.browserStorage: Environment does not support sessionStorage.";
+        throw new Error("Backbone.browserStorage: Environment does not support sessionStorage.");
     }
     this.name = name;
     this.serializer = serializer || {
@@ -68,7 +74,7 @@ function _browserStorage (name, serializer, type) {
     } else if (type === 'local') {
         this.store = window.localStorage;
     } else {
-        throw "Backbone.browserStorage: No storage type was specified";
+        throw new Error("Backbone.browserStorage: No storage type was specified");
     }
     _store = this.store.getItem(this.name);
     this.records = (_store && _store.split(",")) || [];

@@ -11,9 +11,12 @@
     "underscore": ">=1.4.0"
   },
   "devDependencies": {
-    "uglify-js": "~1.2.6",
-    "mocha-phantomjs": "~1.1.2",
-    "browserify": "~2.x.x"
+    "browserify": "~2.x.x",
+    "eslint": "^5.8.0",
+    "eslint-plugin-lodash": "^3.1.0",
+    "http-server": "^0.10.0",
+    "run-headless-chromium": "^0.1.1",
+    "uglify-js": "~1.2.6"
   },
   "keywords": [
     "backbone",
