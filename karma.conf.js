@@ -57,7 +57,8 @@ module.exports = function(config) {
       },
       resolve: {
         alias: {
-          'backbone.browserStorage': path.resolve('backbone.browserStorage.js')
+          'backbone.browserStorage': path.resolve('src/backbone.browserStorage.js'),
+          '../utils': path.resolve('node_modules/localforage/src/utils')
         }
       }
     },

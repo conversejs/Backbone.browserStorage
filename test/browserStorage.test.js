@@ -27,7 +27,7 @@ describe("Backbone.browserStorage", function () {
 
         const Collection = Backbone.Collection.extend({
             model: Model,
-            browserStorage: new Backbone.BrowserStorage.local("collectionStore")
+            browserStorage: new Backbone.BrowserStorage("collectionStore", "local")
         });
 
         const collection = new Collection();
@@ -177,7 +177,7 @@ describe("Backbone.browserStorage", function () {
 
                 const Collection2 = Backbone.Collection.extend({
                     model: Model2,
-                    browserStorage: new Backbone.BrowserStorage.local("collection2Store")
+                    browserStorage: new Backbone.BrowserStorage("collection2Store", "local")
                 });
 
                 const collection2 = new Collection2();
@@ -197,7 +197,7 @@ describe("Backbone.browserStorage", function () {
 
         const Model = Backbone.Model.extend({
             defaults: attributes,
-            browserStorage: new Backbone.BrowserStorage.local("modelStore")
+            browserStorage: new Backbone.BrowserStorage("modelStore", "local")
         });
 
         const model = new Model();
