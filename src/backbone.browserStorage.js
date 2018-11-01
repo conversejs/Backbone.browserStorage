@@ -5,8 +5,8 @@
  * https://github.com/conversejs/Backbone.browserStorage
  */
 import * as localForage from "localforage";
-import { after, extend, includes, isObject, isString, partial, result } from 'lodash';
 import Backbone from "backbone";
+import { result } from 'lodash';
 
 function S4() {
     // Generate four random hex digits.
@@ -120,7 +120,7 @@ class BrowserStorage {
             model.id = guid();
             model.set(model.idAttribute, model.id, options);
         }
-        return this.update(model, options);
+        return this.save(model);
     }
 
     update (model) {
@@ -137,7 +137,7 @@ class BrowserStorage {
         await this.storeInitialized;
         const data = await this.store.getItem(this.name);
         if (data && data.length) {
-            return Promise.all(data.map(item => this.store.getItem(this.getItemName(item.id))));
+            return Promise.all(data.map(item => this.store.getItem(item)));
         }
         return [];
     }

@@ -1,13 +1,11 @@
+import * as BrowserStorage from "backbone.browserStorage";
 import { clone, each, extend, range, times } from 'lodash';
 import Backbone from 'backbone';
-import BrowserStorage from 'backbone.browserStorage';
 import { assert } from 'chai';
 import root from 'window-or-global';
 
-/*global after, before */
 
-
-describe("Backbone.browserStorage", function () {
+describe("Backbone.browserStorage using localStorage", function () {
 
     const attributes = {
         string: "String",

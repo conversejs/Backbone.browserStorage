@@ -37,7 +37,8 @@ module.exports = function(config) {
       },
       output: {
         path: path.resolve('test'),
-        filename: 'test.out.js'
+        filename: '[name].out.js',
+        chunkFilename: '[id].[chunkHash].js'
       },
       resolve: {
         alias: {
@@ -50,9 +51,7 @@ module.exports = function(config) {
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
     reporters,
-    // web server port
     port: 9876,
-    // enable / disable colors in the output (reporters and logs)
     colors: true,
     // level of logging
     // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
