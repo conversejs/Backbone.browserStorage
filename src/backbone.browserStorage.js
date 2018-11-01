@@ -53,6 +53,10 @@ class BrowserStorage {
 
         async function localSync (method, model, options) {
             let resp, errorMessage;
+            // We get the collection here, waiting for storeInitialized
+            // will cause another iteration of the event loop, after
+            // which the collection reference will be removed from the model.
+            const collection = model.collection;
             await that.storeInitialized;
             try {
                 switch (method) {
@@ -70,7 +74,8 @@ class BrowserStorage {
                         resp = await that.update(model, options);
                         break;
                     case "delete":
-                        resp = await that.destroy(model, options);
+                        debugger;
+                        resp = await that.destroy(model, collection);
                         break;
                 }
             } catch (error) {
@@ -96,8 +101,7 @@ class BrowserStorage {
         return localSync;
     }
 
-    updateCollectionReferences (model) {
-        const collection = model.collection;
+    updateCollectionReferences (collection) {
         if (!collection) {
             return;
         }
@@ -108,7 +112,7 @@ class BrowserStorage {
     async save (model) {
         const key = this.getItemName(model.id);
         const data = await this.store.setItem(key, model.toJSON());
-        this.updateCollectionReferences(model);
+        this.updateCollectionReferences(model.collection);
         return data;
     }
 
@@ -142,9 +146,9 @@ class BrowserStorage {
         return [];
     }
 
-    async destroy (model, options) {
+    async destroy (model, collection) {
         await this.store.removeItem(this.getItemName(model.id));
-        this.updateCollectionReferences(model);
+        this.updateCollectionReferences(collection);
         return model;
     }
 

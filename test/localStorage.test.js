@@ -227,7 +227,6 @@ describe("Backbone.browserStorage using localStorage", function () {
         describe("destroy", function () {
 
             it("should have removed the instance from the store", async function () {
-                localStorage.clear();
                 const model = new Model();
                 await new Promise((resolve, reject) => model.save(null, {'success': resolve}));
                 const store = model.browserStorage.store;

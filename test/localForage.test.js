@@ -43,9 +43,7 @@ describe('Backbone.Collection using indexedDB', function() {
     it('removes from localForage', async function () {
         const collection = new Collection();
         const model = await new Promise((resolve, reject) => collection.create({'hello': 'world!'}, {'success': resolve}));
-
         const store = model.collection.browserStorage;
-
         const stored_model = await localForage.getItem(store.getItemName(model.id));
         expect(stored_model).to.deep.equal(model.attributes);
         expect(collection.length).to.equal(1);
@@ -58,31 +56,5 @@ describe('Backbone.Collection using indexedDB', function() {
         // expect collection references to be reset
         const stored_collection2 = await localForage.getItem(store.name);
         expect(stored_collection2.length).to.equal(stored_collection.length - 1);
-    });
-
-
-    let id;
-    describe('check that key is available even for unsynced collection', function() {
-        var anotherCollection;
-
-        var AnotherCollection = Backbone.Collection.extend({
-            'browserStorage': new Backbone.BrowserStorage('AnotherCollection', 'indexedDB'),
-            'model': Backbone.Model
-        });
-
-        xit('localForageKey should not be defined when unsynced', function() {
-            anotherCollection = new AnotherCollection();
-            expect(anotherCollection.sync.localForageKey).toBeUndefined();
-        });
-
-        xit('localForageKey should be set for collection on model sync prior to collection sync (collection.create)', function(done) {
-            // calling create will create a model and call save() on your behalf
-            anotherCollection.create({foo: 'bar'}, {
-                success: function() {
-                    expect(anotherCollection.sync.localForageKey).not.toBeUndefined();
-                    done();
-                }
-            });
-        });
     });
 });
