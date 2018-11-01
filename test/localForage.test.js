@@ -23,49 +23,45 @@ describe('Backbone.Collection using indexedDB', function() {
     it('fetches from localForage', async function () {
         const collection = new Collection();
         let model = await new Promise((resolve, reject) => collection.create({'hello': 'world!'}, {'success': resolve}));
-        const id = model.id;
-
-        await new Promise((resolve, reject) => collection.fetch({success: () => resolve()}));
+        const models = await new Promise((resolve, reject) => collection.fetch({'success': resolve}));
+        expect(models.length).to.equal(1);
         expect(collection.length).to.equal(1);
-
-        model = collection.get(id);
-        expect(model.attributes).to.deep.equal({
-            'id': id,
-            'hello': 'world!'
-        });
+        model = collection.get(model.id);
+        expect(model.attributes).to.deep.equal({'id': model.id, 'hello': 'world!'});
     });
 
 
-    xit('updates to localForage', async function () {
+    it('updates to localForage', async function () {
         const collection = new Collection();
         const model = await new Promise((resolve, reject) => collection.create({'hello': 'world!'}, {'success': resolve}));
-        await new Promise((resolve, reject) => collection.get(id).save({'hello': 'you!'}, {'success': resolve}));
-        expect(collection.get(id).get('hello')).to.equal('you!');
+        await new Promise((resolve, reject) => collection.get(model.id).save({'hello': 'you!'}, {'success': resolve}));
+        const models = await new Promise((resolve, reject) => collection.fetch({'success': resolve}));
+        expect(models.length).to.equal(1);
+        expect(collection.get(models.at(0).id).get('hello')).to.equal('you!');
+    });
+
+    it('removes from localForage', async function () {
+        const collection = new Collection();
+        const model = await new Promise((resolve, reject) => collection.create({'hello': 'world!'}, {'success': resolve}));
+
+        const store = model.collection.browserStorage;
+
+        const stored_model = await localForage.getItem(store.getItemName(model.id));
+        expect(stored_model).to.deep.equal(model.attributes);
+        expect(collection.length).to.equal(1);
+
+        const stored_collection = await localForage.getItem(store.name);
+        await new Promise((resolve, reject) => collection.get(model.id).destroy({'success': resolve}));
+        expect(collection.length).to.equal(0);
+        expect(await localForage.getItem(store.getItemName(model.id))).to.be.null;
+
+        // expect collection references to be reset
+        const stored_collection2 = await localForage.getItem(store.name);
+        expect(stored_collection2.length).to.equal(stored_collection.length - 1);
     });
 
 
     let id;
-    xit('removes from localForage', function(done) {
-        const collection = new Collection();
-
-        localForage.getItem(collection.sync.localForageKey, function(err, values) { // eslint-disable-line handle-callback-err
-
-            collection.get(id).destroy({
-                success: function() {
-                    expect(collection.length).to.equal(0);
-
-                    // expect collection references to be reset
-                    localForage.getItem(collection.sync.localForageKey, function(err, values2) { // eslint-disable-line handle-callback-err
-                        expect(values2.length).to.equal(values.length - 1);
-
-                        // test complete
-                        done();
-                    });
-                }
-            });
-        });
-    });
-
     describe('check that key is available even for unsynced collection', function() {
         var anotherCollection;
 
