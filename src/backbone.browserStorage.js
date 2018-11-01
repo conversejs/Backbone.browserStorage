@@ -39,7 +39,9 @@ class BrowserStorage {
             // FIXME
             this.store = window.sessionStorage;
         } else if (this.type === 'local') {
-            await localForage.config({'driver': localForage.LOCALSTORAGE});
+            await localForage.config({
+                'driver': localForage.LOCALSTORAGE
+            });
             this.store = localForage;
         } else {
             throw new Error("Backbone.browserStorage: No storage type was specified");
@@ -49,7 +51,7 @@ class BrowserStorage {
     sync (name) {
         const that = this;
 
-        const _sync = async function (method, model, options) {
+        async function localSync (method, model, options) {
             let resp, errorMessage;
             await that.storeInitialized;
             try {
@@ -62,7 +64,7 @@ class BrowserStorage {
                         }
                         break;
                     case "create":
-                        resp = that.create(model, options);
+                        resp = await that.create(model, options);
                         break;
                     case "update":
                         resp = await that.update(model, options);
@@ -90,7 +92,8 @@ class BrowserStorage {
                 }
             }
         }
-        return _sync;
+        localSync.__name__ = 'localSync';
+        return localSync;
     }
 
     updateCollectionReferences (model) {
@@ -99,7 +102,7 @@ class BrowserStorage {
             return;
         }
         const ids = collection.map(m => this.getItemName(m.id));
-        this.store.setItem(this.store.name, ids);
+        this.store.setItem(this.name, ids);
     }
 
     async save (model) {
@@ -175,7 +178,7 @@ Backbone.ajaxSync = Backbone.sync;
 
 Backbone.getSyncMethod = function (model) {
     const store = result(model, 'browserStorage') || result(model.collection, 'browserStorage');
-    return store ? store.sync : Backbone.ajaxSync;
+    return store ? store.sync() : Backbone.ajaxSync;
 };
 
 Backbone.sync = function (method, model, options) {

@@ -16,8 +16,8 @@ stamp-npm: package.json package-lock.json
 
 .PHONY: eslint
 eslint: stamp-npm
-	$(ESLINT) backbone.browserStorage.js
-	$(ESLINT) test/browserStorage.test.js
+	$(ESLINT) src/
+	$(ESLINT) test/
 
 .PHONY: serve
 serve:

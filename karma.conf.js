@@ -1,6 +1,4 @@
 // Karma configuration
-// Generated on Sun Feb 19 2017 21:14:14 GMT+0000 (GMT)
-
 /* globals module */
 
 const path = require('path');
@@ -8,10 +6,7 @@ const coverageReporters = [{
   type: 'text-summary'
 }];
 
-const reporters = [
-  'progress',
-  'coverage'
-];
+const reporters = ['progress'];
 
 module.exports = function(config) {
   config.set({
@@ -32,23 +27,12 @@ module.exports = function(config) {
       'test/*.test.js': ['webpack']
     },
     webpack: {
+      mode: 'development',
       devtool: 'inline-source-map',
       module: {
          rules: [{
            test: /\.js$/,
-           exclude: /(node_modules|test)/,
-           use: {
-             loader: 'babel-loader',
-             options: {
-               presets: [
-                 ["@babel/preset-env", {
-                     "targets": {
-                         "browsers": [">1%", "not ie 11", "not op_mini all"]
-                     }
-                 }]
-               ]
-             }
-           }
+           exclude: /(node_modules|test)/
          }]
       },
       output: {
@@ -66,13 +50,6 @@ module.exports = function(config) {
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
     reporters,
-    coverageReporter: {
-      reporters: coverageReporters
-    },
-    coverageIstanbulReporter: {
-      reports: ['text-summary'],
-      fixWebpackSourcePaths: true
-    },
     // web server port
     port: 9876,
     // enable / disable colors in the output (reporters and logs)
