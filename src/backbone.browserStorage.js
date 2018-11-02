@@ -7,6 +7,8 @@
 import * as localForage from "localforage";
 import Backbone from "backbone";
 import { result } from 'lodash';
+import sessionStorageWrapper from "./drivers/sessionStorage.js";
+
 
 function S4() {
     // Generate four random hex digits.
@@ -33,19 +35,17 @@ class BrowserStorage {
     }
 
     async initStore () {
-        if (this.type === 'indexedDB') {
-            this.store = localForage;
-        } else if (this.type === 'session') {
-            // FIXME
-            this.store = window.sessionStorage;
+        if (this.type === 'session') {
+            await localForage.defineDriver(sessionStorageWrapper);
+            localForage.setDriver(sessionStorageWrapper._driver);
         } else if (this.type === 'local') {
             await localForage.config({
                 'driver': localForage.LOCALSTORAGE
             });
-            this.store = localForage;
-        } else {
+        } else if (this.type !== 'indexedDB') {
             throw new Error("Backbone.browserStorage: No storage type was specified");
         }
+        this.store = localForage;
     }
 
     sync (name) {
@@ -74,7 +74,6 @@ class BrowserStorage {
                         resp = await that.update(model, options);
                         break;
                     case "delete":
-                        debugger;
                         resp = await that.destroy(model, collection);
                         break;
                 }

@@ -1,0 +1,259 @@
+import * as BrowserStorage from "backbone.browserStorage";
+import { clone, uniq } from 'lodash';
+import Backbone from 'backbone';
+import { expect } from 'chai';
+import root from 'window-or-global';
+
+const attributes = {
+    string: 'String',
+    string2: 'String 2',
+    number: 1337
+};
+
+const SavedModel = Backbone.Model.extend({
+    browserStorage: new Backbone.BrowserStorage('SavedModel', 'session'),
+    defaults: attributes,
+    urlRoot: '/test/'
+});
+
+const AjaxModel = Backbone.Model.extend({
+    defaults: attributes
+});
+
+const SavedCollection = Backbone.Collection.extend({
+    model: AjaxModel,
+    browserStorage: new Backbone.BrowserStorage('SavedCollection', 'session')
+});
+
+
+describe('Backbone.BrowserStorage Model using sessionStorage', function () {
+
+    it('is saved with the given name', async function () {
+        const mySavedModel = new SavedModel({'id': 10});
+        await new Promise((resolve, reject) => mySavedModel.save(null, {'success': resolve}));
+        const item = root.sessionStorage.getItem('localforage/SavedModel-10');
+        const parsed = JSON.parse(item);
+        expect(parsed.id).to.equal(10);
+        expect(parsed.string).to.equal('String');
+        expect(parsed.string2).to.equal('String 2');
+        expect(parsed.number).to.equal(1337);
+    });
+
+    it('can be converted to JSON', function () {
+        const mySavedModel = new SavedModel({'id': 10});
+        mySavedModel.save();
+        expect(mySavedModel.toJSON()).to.eql({
+            string: 'String',
+            id: 10,
+            number: 1337,
+            string2: 'String 2'
+        });
+    });
+
+    describe('once saved', function () {
+
+        it('can be fetched from sessionStorage', function () {
+            const newModel = new SavedModel({'id': 10});
+            newModel.fetch();
+            expect(newModel.get('string')).to.equal('String');
+            expect(newModel.get('string2')).to.equal('String 2');
+            expect(newModel.get('number')).to.equal(1337);
+        });
+
+        it('passes fetch calls to success', function(done) {
+            const mySavedModel = new SavedModel({'id': 10});
+            mySavedModel.save();
+            mySavedModel.fetch({
+                success(model, response, options) {
+                    expect(model).to.equal(mySavedModel);
+                    done();
+                }
+            });
+        });
+
+        it('can be updated', async function () {
+            const mySavedModel = new SavedModel({'id': 10});
+            await new Promise((resolve, reject) => mySavedModel.save({'string': 'New String', 'number2': 1234}, {'success': resolve}));
+            expect(mySavedModel.pick('string', 'number2')).to.eql({
+                'string': 'New String',
+                'number2': 1234
+            });
+        });
+
+        it('persists its update to sessionStorage', async function () {
+            const mySavedModel = new SavedModel({'id': 10});
+            await new Promise((resolve, reject) => mySavedModel.save({'string': 'New String', 'number2': 1234}, {'success': resolve}));
+            const item = root.sessionStorage.getItem(`localforage/SavedModel-${mySavedModel.id}`);
+            expect(item).to.be.a('string');
+            const parsed = JSON.parse(item);
+            expect(parsed).to.deep.equal({
+                id: 10,
+                string: 'New String',
+                string2: 'String 2',
+                number: 1337,
+                number2: 1234
+            });
+        });
+
+        it('saves to sessionStorage with patch', async function () {
+            const mySavedModel = new SavedModel({'id': 10});
+            await new Promise((resolve, reject) => mySavedModel.save({'string': 'New String', 'number2': 1234}, {'patch': true, 'success': resolve}));
+            const item = root.sessionStorage.getItem(`localforage/SavedModel-${mySavedModel.id}`);
+            expect(item).to.be.a('string');
+            const parsed = JSON.parse(item);
+            expect(parsed).to.deep.equal({
+                string: 'New String',
+                string2: 'String 2',
+                id: 10,
+                number: 1337,
+                number2: 1234
+            });
+        });
+
+        it('can be destroyed', async function () {
+            const mySavedModel = new SavedModel({'id': 10});
+            await new Promise((resolve, reject) => mySavedModel.destroy({'success': resolve}));
+            const item = root.sessionStorage.getItem('localforage/SavedModel-10');
+            expect(item).to.be.null;
+        });
+    });
+
+    describe('with storage updated from elsewhere', function () {
+
+        it('will re-fetch new data', async function () {
+            const newModel = new SavedModel({'id': 10});
+            await new Promise((resolve, reject) => newModel.save({'string': 'String'}, {'success': resolve}));
+            await new Promise((resolve, reject) => newModel.fetch({'success': resolve}));
+            expect(newModel.get('string')).to.equal('String');
+
+            const mySavedModel = new SavedModel({'id': 10});
+            await new Promise((resolve, reject) => mySavedModel.save({'string': 'Brand new string'}, {'success': resolve}));
+            await new Promise((resolve, reject) => newModel.fetch({'success': resolve}));
+            expect(newModel.get('string')).to.equal('Brand new string');
+        });
+    });
+
+    describe('with a different idAttribute', function () {
+
+        const DifferentIdAttribute = Backbone.Model.extend({
+            browserStorage: new Backbone.BrowserStorage('DifferentId', 'session'),
+            idAttribute: 'number'
+        });
+
+        it('can be saved with the new value', async function () {
+            const mySavedModel = new DifferentIdAttribute(attributes);
+            await new Promise((resolve, reject) => mySavedModel.save(null, {'success': resolve}));
+            const item = root.sessionStorage.getItem('DifferentId-1337');
+            const parsed = JSON.parse(item);
+
+            expect(item).to.be.a('string');
+            expect(parsed.string).to.be.a('string');
+        });
+
+        it('can be fetched with the new value', async function () {
+            const mySavedModel = new DifferentIdAttribute(attributes);
+            root.sessionStorage.setItem('DifferentId-1337', JSON.stringify(attributes));
+            const newModel = new DifferentIdAttribute({'number': 1337 });
+            await new Promise((resolve, reject) => newModel.fetch({'success': resolve}));
+            expect(newModel.id).to.equal(1337);
+            expect(newModel.get('string')).to.be.a('string');
+        });
+    });
+    
+    describe('New sessionStorage model', function () {
+
+        it('creates a new item in sessionStorage', async function () {
+            const mySavedModel = new SavedModel();
+            await new Promise((resolve, reject) => mySavedModel.save({'data': 'value'}, {'success': resolve}));
+            const item = root.sessionStorage.getItem(`localforage/SavedModel-${mySavedModel.id}`);
+            const parsed = JSON.parse(item);
+            expect(parsed).to.eql(mySavedModel.attributes);
+        });
+    });
+});
+
+describe('Backbone.browserStorage Collection using sessionStorage', function () {
+
+    it('saves to sessionStorage', function () {
+        const mySavedCollection = new SavedCollection();
+        mySavedCollection.create(attributes);
+        expect(mySavedCollection.length).to.equal(1);
+    });
+
+    it('cannot duplicate id in sessionStorage', function () {
+        const item = clone(attributes);
+        item.id = 5;
+
+        const newCollection = new SavedCollection([item]);
+        newCollection.create(item);
+        newCollection.create(item);
+        const localItem = root.sessionStorage.getItem('localforage/SavedCollection-5');
+        expect(newCollection.length).to.equal(1);
+        expect(JSON.parse(localItem).id).to.equal(5);
+    });
+
+
+    describe('pulling from sessionStorage', function () {
+
+        it('saves into the sessionStorage', async function () {
+            const mySavedCollection = new SavedCollection();
+            const model = await new Promise((resolve, reject) => mySavedCollection.create(attributes, {'success': resolve}));
+            const item = root.sessionStorage.getItem(`localforage/SavedCollection-${model.id}`);
+            expect(item).to.be.a('string');
+        });
+
+        it('saves the right data', async function () {
+            const mySavedCollection = new SavedCollection();
+            const model = await new Promise((resolve, reject) => mySavedCollection.create(attributes, {'success': resolve}));
+            const item = root.sessionStorage.getItem(`localforage/SavedCollection-${model.id}`);
+            const parsed = JSON.parse(item);
+            expect(parsed.id).to.equal(model.id);
+            expect(parsed.string).to.equal('String');
+        });
+
+        it('reads from sessionStorage', async function () {
+            const mySavedCollection = new SavedCollection();
+            let model = await new Promise((resolve, reject) => mySavedCollection.create(attributes, {'success': resolve}));
+            const item = root.sessionStorage.getItem(`SavedCollection-${model.id}`);
+            const newCollection = new SavedCollection();
+            model = await new Promise((resolve, reject) => newCollection.fetch({'success': resolve}));
+            expect(newCollection.length).to.equal(1);
+            const newModel = newCollection.at(0);
+            expect(newModel.get('string')).to.equal('String');
+        });
+
+        it('destroys models and removes from collection', async function () {
+            const mySavedCollection = new SavedCollection();
+            const model = await new Promise((resolve, reject) => mySavedCollection.create(attributes, {'success': resolve}));
+            const item = root.sessionStorage.getItem(`localforage/SavedCollection-${model.id}`);
+            const parsed = JSON.parse(item);
+            const newModel = mySavedCollection.get(parsed.id);
+            await new Promise((resolve, reject) => newModel.destroy({'success': resolve}));
+            const removed = root.sessionStorage.getItem(`SavedCollection-${parsed.id}`);
+            expect(removed).to.be.null;
+            expect(mySavedCollection.length).to.equal(0);
+        });
+    });
+
+    describe('will fetch from sessionStorage if updated separately', function () {
+
+        it('fetches the items from the original collection', async function () {
+            const mySavedCollection = new SavedCollection();
+            await new Promise((resolve, reject) => mySavedCollection.create(attributes, {'success': resolve}));
+            const newCollection = new SavedCollection();
+            await new Promise((resolve, reject) => newCollection.fetch({'success': resolve}));
+            expect(newCollection.length).to.equal(1);
+        });
+
+        it('will update future changes', async function () {
+            const mySavedCollection = new SavedCollection();
+            const newAttributes = clone(attributes);
+            mySavedCollection.create(newAttributes);
+            await new Promise((resolve, reject) => mySavedCollection.create(newAttributes, {'success': resolve}));
+
+            const newCollection = new SavedCollection();
+            await new Promise((resolve, reject) => newCollection.fetch({'success': resolve}));
+            expect(newCollection.length).to.equal(2);
+        });
+    });
+});
