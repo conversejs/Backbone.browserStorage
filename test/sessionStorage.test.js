@@ -28,6 +28,10 @@ const SavedCollection = Backbone.Collection.extend({
 
 describe('Backbone.BrowserStorage Model using sessionStorage', function () {
 
+    beforeEach(function () {
+        sessionStorage.clear();
+    });
+
     it('is saved with the given name', async function () {
         const mySavedModel = new SavedModel({'id': 10});
         await new Promise((resolve, reject) => mySavedModel.save(null, {'success': resolve}));
@@ -51,6 +55,10 @@ describe('Backbone.BrowserStorage Model using sessionStorage', function () {
     });
 
     describe('once saved', function () {
+
+        beforeEach(function () {
+            sessionStorage.clear();
+        });
 
         it('can be fetched from sessionStorage', function () {
             const newModel = new SavedModel({'id': 10});
@@ -140,10 +148,14 @@ describe('Backbone.BrowserStorage Model using sessionStorage', function () {
             idAttribute: 'number'
         });
 
+        beforeEach(function () {
+            sessionStorage.clear();
+        });
+
         it('can be saved with the new value', async function () {
             const mySavedModel = new DifferentIdAttribute(attributes);
             await new Promise((resolve, reject) => mySavedModel.save(null, {'success': resolve}));
-            const item = root.sessionStorage.getItem('DifferentId-1337');
+            const item = root.sessionStorage.getItem('localforage/DifferentId-1337');
             const parsed = JSON.parse(item);
 
             expect(item).to.be.a('string');
@@ -152,7 +164,7 @@ describe('Backbone.BrowserStorage Model using sessionStorage', function () {
 
         it('can be fetched with the new value', async function () {
             const mySavedModel = new DifferentIdAttribute(attributes);
-            root.sessionStorage.setItem('DifferentId-1337', JSON.stringify(attributes));
+            root.sessionStorage.setItem('localforage/DifferentId-1337', JSON.stringify(attributes));
             const newModel = new DifferentIdAttribute({'number': 1337 });
             await new Promise((resolve, reject) => newModel.fetch({'success': resolve}));
             expect(newModel.id).to.equal(1337);
@@ -174,19 +186,22 @@ describe('Backbone.BrowserStorage Model using sessionStorage', function () {
 
 describe('Backbone.browserStorage Collection using sessionStorage', function () {
 
+    beforeEach(function () {
+        sessionStorage.clear();
+    });
+
     it('saves to sessionStorage', function () {
         const mySavedCollection = new SavedCollection();
         mySavedCollection.create(attributes);
         expect(mySavedCollection.length).to.equal(1);
     });
 
-    it('cannot duplicate id in sessionStorage', function () {
+    it('cannot duplicate id in sessionStorage', async function () {
         const item = clone(attributes);
         item.id = 5;
-
         const newCollection = new SavedCollection([item]);
-        newCollection.create(item);
-        newCollection.create(item);
+        await new Promise((resolve, reject) => newCollection.create(item, {'success': resolve}));
+        await new Promise((resolve, reject) => newCollection.create(item, {'success': resolve}));
         const localItem = root.sessionStorage.getItem('localforage/SavedCollection-5');
         expect(newCollection.length).to.equal(1);
         expect(JSON.parse(localItem).id).to.equal(5);
@@ -194,6 +209,10 @@ describe('Backbone.browserStorage Collection using sessionStorage', function () 
 
 
     describe('pulling from sessionStorage', function () {
+
+        beforeEach(function () {
+            sessionStorage.clear();
+        });
 
         it('saves into the sessionStorage', async function () {
             const mySavedCollection = new SavedCollection();
@@ -214,7 +233,6 @@ describe('Backbone.browserStorage Collection using sessionStorage', function () 
         it('reads from sessionStorage', async function () {
             const mySavedCollection = new SavedCollection();
             let model = await new Promise((resolve, reject) => mySavedCollection.create(attributes, {'success': resolve}));
-            const item = root.sessionStorage.getItem(`SavedCollection-${model.id}`);
             const newCollection = new SavedCollection();
             model = await new Promise((resolve, reject) => newCollection.fetch({'success': resolve}));
             expect(newCollection.length).to.equal(1);
@@ -229,13 +247,17 @@ describe('Backbone.browserStorage Collection using sessionStorage', function () 
             const parsed = JSON.parse(item);
             const newModel = mySavedCollection.get(parsed.id);
             await new Promise((resolve, reject) => newModel.destroy({'success': resolve}));
-            const removed = root.sessionStorage.getItem(`SavedCollection-${parsed.id}`);
+            const removed = root.sessionStorage.getItem(`localforage/SavedCollection-${parsed.id}`);
             expect(removed).to.be.null;
             expect(mySavedCollection.length).to.equal(0);
         });
     });
 
     describe('will fetch from sessionStorage if updated separately', function () {
+
+        beforeeach(function () {
+            sessionStorage.clear();
+        });
 
         it('fetches the items from the original collection', async function () {
             const mySavedCollection = new SavedCollection();
