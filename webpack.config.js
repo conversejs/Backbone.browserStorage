@@ -2,10 +2,20 @@
 'use strict';
 
 const path = require('path');
+const minimist = require('minimist');
 const _ = require('lodash');
-
 const config = {
-    entry: path.resolve(__dirname, 'backbone.browserStorage.js'),
+    mode: 'development',
+    entry: path.resolve(__dirname, 'src/backbone.browserStorage.js'),
+    output: {
+        path: path.resolve(__dirname, 'dist'),
+        filename: 'backbone.browserStorage.js'
+    },
+    resolve: {
+        alias: {
+        '../utils': path.resolve('node_modules/localforage/src/utils')
+        }
+    },
     externals: {
         backbone: {
             amd: 'backbone',
@@ -39,5 +49,16 @@ const config = {
         }
     }
 }
+
+function parameterize () {
+    const mode = minimist(process.argv.slice(2)).mode;
+    if (mode === 'production') {
+        console.log("Making a production build");
+        const fn = config.output.filename;
+        config.output.filename = `${fn.replace(/\.js$/, '')}.min.js`;
+    }
+}
+
+parameterize();
 
 module.exports = config;
