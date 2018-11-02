@@ -18,6 +18,7 @@ describe("Backbone.browserStorage using localStorage", function () {
     };
 
     describe("on a Collection", function () {
+        beforeEach(() => localStorage.clear());
 
         const Model = Backbone.Model.extend({
             defaults: attributes
@@ -42,6 +43,7 @@ describe("Backbone.browserStorage using localStorage", function () {
 
 
         describe("create", function () {
+            beforeEach(() => localStorage.clear());
 
             it("should have 1 model", async function () {
                 const collection = new Collection();
@@ -72,6 +74,7 @@ describe("Backbone.browserStorage using localStorage", function () {
         });
 
         describe("get (by `id`)", function () {
+            beforeEach(() => localStorage.clear());
 
             it("should find the model with its `id`", async function () {
                 const collection = new Collection();
@@ -79,12 +82,13 @@ describe("Backbone.browserStorage using localStorage", function () {
                 await model.collection.browserStorage.storeInitialized;
                 assert.deepEqual(collection.get(model.id), model);
             });
-
         });
 
         describe("instances", function () {
+            beforeEach(() => localStorage.clear());
 
             describe("when saved", function () {
+                beforeEach(() => localStorage.clear());
 
                 it("should persist the changes", async function () {
                     const collection = new Collection();
@@ -96,6 +100,7 @@ describe("Backbone.browserStorage using localStorage", function () {
                 });
 
                 describe("with a new `id`", function () {
+                    beforeEach(() => localStorage.clear());
 
                     it("should have a new `id`", async function () {
                         const collection = new Collection();
@@ -121,8 +126,7 @@ describe("Backbone.browserStorage using localStorage", function () {
                         const collection = new Collection();
                         const model = await new Promise((resolve, reject) => collection.create({}, {'success': resolve}));
                         model.save({'id': 1});
-                        collection.fetch();
-
+                        await new Promise((resolve, reject) => collection.fetch({'success': resolve}));
                         assert.isNotNull(root.localStorage.getItem('localforage/collectionStore-1'));
                     });
                 });
@@ -130,6 +134,7 @@ describe("Backbone.browserStorage using localStorage", function () {
 
 
             describe("destroy", function () {
+                beforeEach(() => localStorage.clear());
 
                 it("should remove all items from the collection and its store", async function () {
                     const collection = new Collection();
@@ -168,12 +173,12 @@ describe("Backbone.browserStorage using localStorage", function () {
     });
 
     describe("on a Model", function () {
+        beforeEach(() => localStorage.clear());
 
         const Model = Backbone.Model.extend({
             defaults: attributes,
             browserStorage: new Backbone.BrowserStorage("modelStore", "local")
         });
-
 
         it("should use `localSync`", function () {
             const model = new Model();
@@ -181,6 +186,7 @@ describe("Backbone.browserStorage using localStorage", function () {
         });
 
         describe("fetch", function () {
+            beforeEach(() => localStorage.clear());
 
             it('should fire sync event on fetch', function(done) {
                 const model = new Model(attributes);
@@ -190,6 +196,7 @@ describe("Backbone.browserStorage using localStorage", function () {
         });
 
         describe("save", function () {
+            beforeEach(() => localStorage.clear());
 
             it("should have assigned an `id` to the model", async function () {
                 const model = new Model();
@@ -241,6 +248,7 @@ describe("Backbone.browserStorage using localStorage", function () {
 });
 
 describe("Without Backbone.browserStorage", function () {
+    beforeEach(() => localStorage.clear());
 
     describe("on a Collection", function () {
 

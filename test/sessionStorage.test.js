@@ -27,10 +27,7 @@ const SavedCollection = Backbone.Collection.extend({
 
 
 describe('Backbone.BrowserStorage Model using sessionStorage', function () {
-
-    beforeEach(function () {
-        sessionStorage.clear();
-    });
+    beforeEach(() => sessionStorage.clear());
 
     it('is saved with the given name', async function () {
         const mySavedModel = new SavedModel({'id': 10});
@@ -55,10 +52,7 @@ describe('Backbone.BrowserStorage Model using sessionStorage', function () {
     });
 
     describe('once saved', function () {
-
-        beforeEach(function () {
-            sessionStorage.clear();
-        });
+        beforeEach(() => sessionStorage.clear());
 
         it('can be fetched from sessionStorage', function () {
             const newModel = new SavedModel({'id': 10});
@@ -127,6 +121,7 @@ describe('Backbone.BrowserStorage Model using sessionStorage', function () {
     });
 
     describe('with storage updated from elsewhere', function () {
+        beforeEach(() => sessionStorage.clear());
 
         it('will re-fetch new data', async function () {
             const newModel = new SavedModel({'id': 10});
@@ -142,14 +137,11 @@ describe('Backbone.BrowserStorage Model using sessionStorage', function () {
     });
 
     describe('with a different idAttribute', function () {
+        beforeEach(() => sessionStorage.clear());
 
         const DifferentIdAttribute = Backbone.Model.extend({
             browserStorage: new Backbone.BrowserStorage('DifferentId', 'session'),
             idAttribute: 'number'
-        });
-
-        beforeEach(function () {
-            sessionStorage.clear();
         });
 
         it('can be saved with the new value', async function () {
@@ -173,6 +165,7 @@ describe('Backbone.BrowserStorage Model using sessionStorage', function () {
     });
     
     describe('New sessionStorage model', function () {
+        beforeEach(() => sessionStorage.clear());
 
         it('creates a new item in sessionStorage', async function () {
             const mySavedModel = new SavedModel();
@@ -185,10 +178,7 @@ describe('Backbone.BrowserStorage Model using sessionStorage', function () {
 });
 
 describe('Backbone.browserStorage Collection using sessionStorage', function () {
-
-    beforeEach(function () {
-        sessionStorage.clear();
-    });
+    beforeEach(() => sessionStorage.clear());
 
     it('saves to sessionStorage', function () {
         const mySavedCollection = new SavedCollection();
@@ -209,10 +199,7 @@ describe('Backbone.browserStorage Collection using sessionStorage', function () 
 
 
     describe('pulling from sessionStorage', function () {
-
-        beforeEach(function () {
-            sessionStorage.clear();
-        });
+        beforeEach(() => sessionStorage.clear());
 
         it('saves into the sessionStorage', async function () {
             const mySavedCollection = new SavedCollection();
@@ -254,10 +241,7 @@ describe('Backbone.browserStorage Collection using sessionStorage', function () 
     });
 
     describe('will fetch from sessionStorage if updated separately', function () {
-
-        beforeeach(function () {
-            sessionStorage.clear();
-        });
+        beforeEach(() => sessionStorage.clear());
 
         it('fetches the items from the original collection', async function () {
             const mySavedCollection = new SavedCollection();
