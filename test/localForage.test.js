@@ -58,3 +58,49 @@ describe('Backbone.Collection using indexedDB', function() {
         expect(stored_collection2.length).to.equal(stored_collection.length - 1);
     });
 });
+
+describe('Backbone.Model using IndexedDB', function () {
+
+    const Model = Backbone.Model.extend({
+        'browserStorage': new Backbone.BrowserStorage('Model', 'indexedDB'),
+    });
+
+    describe('Model flow', function () {
+
+        it('saves to localForage', async function () {
+            let model = new Model();
+            model = await new Promise((resolve, reject) => model.save({'hello': 'world!'}, {'success': resolve}));
+            expect(model.id).to.be.a('string');
+            expect(model.get('hello')).to.equal('world!');
+        });
+
+        it('fetches from localForage', async function () {
+            const model = new Model();
+            await new Promise((resolve, reject) => model.save({'hello': 'world!'}, {'success': resolve}));
+            await new Promise((resolve, reject) => model.fetch({success: resolve}));
+            expect(model.attributes).to.deep.equal({
+                id: model.id,
+                hello: 'world!'
+            });
+        });
+
+        it('updates to localForage', async function () {
+            const model = new Model();
+            await new Promise((resolve, reject) => model.save({'hello': 'world!'}, {'success': resolve}));
+            expect(model.get('hello')).to.equal('world!');
+            await new Promise((resolve, reject) => model.save({'hello': 'you!'}, {'success': resolve}));
+            expect(model.get('hello')).to.equal('you!');
+            await new Promise((resolve, reject) => model.fetch({success: resolve}));
+            expect(model.get('hello')).to.equal('you!');
+        });
+
+        it('removes from localForage', async function () {
+            const model = new Model();
+            await new Promise((resolve, reject) => model.save({'hello': 'world!'}, {'success': resolve}));
+            const fetched_model = await new Promise((resolve, reject) => model.destroy({'success': resolve}));
+            expect(model).to.deep.equal(fetched_model);
+            const result = await new Promise((resolve, reject) => model.fetch({'success': () => resolve('success'), 'error': () => resolve('error')}));
+            expect(result).to.equal('error');
+        });
+    });
+});
