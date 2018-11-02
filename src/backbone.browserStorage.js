@@ -70,6 +70,7 @@ class BrowserStorage {
                     case "create":
                         resp = await that.create(model, options);
                         break;
+                    case 'patch':
                     case "update":
                         resp = await that.update(model, options);
                         break;
