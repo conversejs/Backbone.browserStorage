@@ -4,10 +4,10 @@ import Backbone from 'backbone';
 import { expect } from 'chai';
 
 
-describe('Backbone.Collection using indexedDB', function() {
+describe('Backbone.Collection using IndexedDB', function() {
 
     const Collection = Backbone.Collection.extend({
-        'browserStorage': new Backbone.BrowserStorage('Collection', 'indexedDB'),
+        'browserStorage': new Backbone.BrowserStorage('Collection', 'indexed'),
         'model': Backbone.Model
     });
 
@@ -62,7 +62,7 @@ describe('Backbone.Collection using indexedDB', function() {
 describe('Backbone.Model using IndexedDB', function () {
 
     const Model = Backbone.Model.extend({
-        'browserStorage': new Backbone.BrowserStorage('Model', 'indexedDB'),
+        'browserStorage': new Backbone.BrowserStorage('Model', 'indexed'),
     });
 
     describe('Model flow', function () {

@@ -42,7 +42,7 @@ class BrowserStorage {
             await localForage.config({
                 'driver': localForage.LOCALSTORAGE
             });
-        } else if (this.type !== 'indexedDB') {
+        } else if (this.type !== 'indexed') {
             throw new Error("Backbone.browserStorage: No storage type was specified");
         }
         this.store = localForage;
