@@ -11,11 +11,6 @@ const config = {
         path: path.resolve(__dirname, 'dist'),
         filename: 'backbone.browserStorage.js'
     },
-    resolve: {
-        alias: {
-        '../utils': path.resolve('node_modules/localforage/src/utils')
-        }
-    },
     externals: {
         backbone: {
             amd: 'backbone',

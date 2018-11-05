@@ -14,10 +14,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import executeCallback from '../utils/executeCallback';
-import getCallback from '../utils/getCallback';
-import normalizeKey from '../utils/normalizeKey';
-import serializer from '../utils/serializer';
+import executeCallback from 'localforage/src/utils/executeCallback';
+import getCallback from 'localforage/src/utils/getCallback';
+import normalizeKey from 'localforage/src/utils/normalizeKey';
+import serializer from 'localforage/src/utils/serializer';
 
 
 function isSessionStorageValid () {

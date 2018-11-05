@@ -48,6 +48,7 @@
     "sync"
   ],
   "main": "./dist/backbone.browserStorage.js",
+  "module": "./src/backbone.browserStorage.js",
   "engines": {
     "node": "*"
   }

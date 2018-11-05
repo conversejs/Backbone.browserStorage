@@ -1,4 +1,4 @@
-import * as BrowserStorage from "backbone.browserStorage";
+import * as BrowserStorage from "../src/backbone.browserStorage";
 import { clone, uniq } from 'lodash';
 import Backbone from 'backbone';
 import { expect } from 'chai';

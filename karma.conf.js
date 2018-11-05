@@ -39,12 +39,6 @@ module.exports = function(config) {
         path: path.resolve('test'),
         filename: '[name].out.js',
         chunkFilename: '[id].[chunkHash].js'
-      },
-      resolve: {
-        alias: {
-          'backbone.browserStorage': path.resolve('src/backbone.browserStorage.js'),
-          '../utils': path.resolve('node_modules/localforage/src/utils')
-        }
       }
     },
     // test results reporter to use

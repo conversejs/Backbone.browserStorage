@@ -1,4 +1,4 @@
-import * as BrowserStorage from "backbone.browserStorage";
+import * as BrowserStorage from "../src/backbone.browserStorage";
 import * as localForage from "localforage";
 import Backbone from 'backbone';
 import { expect } from 'chai';
