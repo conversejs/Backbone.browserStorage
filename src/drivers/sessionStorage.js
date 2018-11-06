@@ -58,7 +58,7 @@ function _initStorage(options) {
 
     dbInfo.keyPrefix = _getKeyPrefix(options, self._defaultConfig);
     self._dbInfo = dbInfo;
-    dbInfo.serializer = serializer;
+    dbInfo.serializer = serializer.default;
 }
 
 // Remove all keys from the datastore, effectively destroying all data in
