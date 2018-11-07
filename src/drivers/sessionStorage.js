@@ -19,6 +19,9 @@ import getCallback from 'localforage/src/utils/getCallback';
 import normalizeKey from 'localforage/src/utils/normalizeKey';
 import serializer from 'localforage/src/utils/serializer';
 
+const serialize = serializer["serialize"];
+const deserialize = serializer["deserialize"];
+
 
 function isSessionStorageValid () {
     // If the app is running inside a Google Chrome packaged webapp, or some
@@ -47,29 +50,30 @@ function _getKeyPrefix(options, defaultConfig) {
     return keyPrefix;
 }
 
+const dbInfo = {
+    'serializer': {
+        'serialize': serialize,
+        'deserialize': deserialize
+    }
+};
+
 function _initStorage(options) {
-    var self = this;
-    var dbInfo = {};
+    dbInfo.keyPrefix = _getKeyPrefix(options, this._defaultConfig);
     if (options) {
         for (var i in options) { // eslint-disable-line guard-for-in
             dbInfo[i] = options[i];
         }
     }
-
-    dbInfo.keyPrefix = _getKeyPrefix(options, self._defaultConfig);
-    self._dbInfo = dbInfo;
-    dbInfo.serializer = serializer.default;
 }
 
 // Remove all keys from the datastore, effectively destroying all data in
 // the app's key/value store!
 function clear(callback) {
-    var self = this;
-    var promise = self.ready().then(function() {
-        var keyPrefix = self._dbInfo.keyPrefix;
+    var promise = this.ready().then(function() {
+        const keyPrefix = dbInfo.keyPrefix;
 
-        for (var i = sessionStorage.length - 1; i >= 0; i--) {
-            var key = sessionStorage.key(i);
+        for (let i = sessionStorage.length - 1; i >= 0; i--) {
+            const key = sessionStorage.key(i);
 
             if (key.indexOf(keyPrefix) === 0) {
                 sessionStorage.removeItem(key);
@@ -85,14 +89,10 @@ function clear(callback) {
 // library in Gaia, we don't modify return values at all. If a key's value
 // is `undefined`, we pass that value to the callback function.
 function getItem(key, callback) {
-    var self = this;
-
     key = normalizeKey(key);
 
-    var promise = self.ready().then(function() {
-        var dbInfo = self._dbInfo;
-        var result = sessionStorage.getItem(dbInfo.keyPrefix + key);
-
+    const promise = this.ready().then(function() {
+        let result = sessionStorage.getItem(dbInfo.keyPrefix + key);
         // If a result was found, parse it from the serialized
         // string into a JS object. If result isn't truthy, the key
         // is likely undefined and we'll pass it straight to the
@@ -100,10 +100,8 @@ function getItem(key, callback) {
         if (result) {
             result = dbInfo.serializer.deserialize(result);
         }
-
         return result;
     });
-
     executeCallback(promise, callback);
     return promise;
 }
@@ -113,7 +111,6 @@ function iterate(iterator, callback) {
     var self = this;
 
     var promise = self.ready().then(function() {
-        var dbInfo = self._dbInfo;
         var keyPrefix = dbInfo.keyPrefix;
         var keyPrefixLength = keyPrefix.length;
         var length = sessionStorage.length;
@@ -161,7 +158,6 @@ function iterate(iterator, callback) {
 function key(n, callback) {
     var self = this;
     var promise = self.ready().then(function() {
-        var dbInfo = self._dbInfo;
         var result;
         try {
             result = sessionStorage.key(n);
@@ -184,7 +180,6 @@ function key(n, callback) {
 function keys(callback) {
     var self = this;
     var promise = self.ready().then(function() {
-        var dbInfo = self._dbInfo;
         var length = sessionStorage.length;
         var keys = [];
 
@@ -194,7 +189,6 @@ function keys(callback) {
                 keys.push(itemKey.substring(dbInfo.keyPrefix.length));
             }
         }
-
         return keys;
     });
 
@@ -215,15 +209,10 @@ function length(callback) {
 
 // Remove an item from the store, nice and simple.
 function removeItem(key, callback) {
-    var self = this;
-
     key = normalizeKey(key);
-
-    var promise = self.ready().then(function() {
-        var dbInfo = self._dbInfo;
+    const promise = this.ready().then(function() {
         sessionStorage.removeItem(dbInfo.keyPrefix + key);
     });
-
     executeCallback(promise, callback);
     return promise;
 }
@@ -233,11 +222,9 @@ function removeItem(key, callback) {
 // in case you want to operate on that value only after you're sure it
 // saved, or something like that.
 function setItem(key, value, callback) {
-    var self = this;
-
     key = normalizeKey(key);
 
-    var promise = self.ready().then(function() {
+    const promise = this.ready().then(function() {
         // Convert undefined values to null.
         // https://github.com/mozilla/localForage/pull/42
         if (value === undefined) {
@@ -248,7 +235,6 @@ function setItem(key, value, callback) {
         var originalValue = value;
 
         return new Promise(function(resolve, reject) {
-            var dbInfo = self._dbInfo;
             dbInfo.serializer.serialize(value, function(value, error) {
                 if (error) {
                     reject(error);
