@@ -5,8 +5,7 @@
  * https://github.com/conversejs/Backbone.browserStorage
  */
 import * as localForage from "localforage";
-import Backbone from "backbone";
-import { result } from 'lodash';
+import { isString, result } from 'lodash';
 import sessionStorageWrapper from "./drivers/sessionStorage.js";
 
 
@@ -29,20 +28,21 @@ class BrowserStorage {
         } else if (type === 'session' && !window.sessionStorage ) {
             throw new Error("Backbone.browserStorage: Environment does not support sessionStorage.");
         }
-        this.type = type;
+        if (isString(type)) {
+            this.storeInitialized = this.initStore(type);
+        } else {
+            this.store = type;
+            this.storeInitialized = Promise.resolve();
+        }
         this.name = name;
-        this.storeInitialized = this.initStore();
     }
 
-    async initStore () {
-        if (this.type === 'session') {
-            await localForage.defineDriver(sessionStorageWrapper);
+    async initStore (type) {
+        if (type === 'session') {
             localForage.setDriver(sessionStorageWrapper._driver);
-        } else if (this.type === 'local') {
-            await localForage.config({
-                'driver': localForage.LOCALSTORAGE
-            });
-        } else if (this.type !== 'indexed') {
+        } else if (type === 'local') {
+            await localForage.config({'driver': localForage.LOCALSTORAGE});
+        } else if (type !== 'indexed') {
             throw new Error("Backbone.browserStorage: No storage type was specified");
         }
         this.store = localForage;
@@ -177,16 +177,20 @@ class BrowserStorage {
     }
 }
 
-Backbone.BrowserStorage = BrowserStorage;
-Backbone.ajaxSync = Backbone.sync;
+BrowserStorage.sessionStorageInitialized = localForage.defineDriver(sessionStorageWrapper);
+BrowserStorage.localForage = localForage;
 
-Backbone.getSyncMethod = function (model) {
-    const store = result(model, 'browserStorage') || result(model.collection, 'browserStorage');
-    return store ? store.sync() : Backbone.ajaxSync;
-};
+BrowserStorage.patch = function (Backbone) {
+    Backbone.BrowserStorage = BrowserStorage;
+    Backbone.ajaxSync = Backbone.sync;
 
-Backbone.sync = function (method, model, options) {
-    return Backbone.getSyncMethod(model).apply(this, [method, model, options]);
-};
+    Backbone.getSyncMethod = function (model) {
+        const store = result(model, 'browserStorage') || result(model.collection, 'browserStorage');
+        return store ? store.sync() : Backbone.ajaxSync;
+    };
 
-export default Backbone.BrowserStorage;
+    Backbone.sync = function (method, model, options) {
+        return Backbone.getSyncMethod(model).apply(this, [method, model, options]);
+    };
+}
+export default BrowserStorage;
