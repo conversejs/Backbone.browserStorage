@@ -2,6 +2,11 @@
 
 ## 1.0.0 (Unreleased)
 
+### API change:
+
+It's now necessary to explicitly patch Backbone by calling
+`Backbone.BrowserStorage.patch(Backbone)`;
+
 - Add support for IndexedDB via localForage.
 - Use ES2015 features, bundle with webpack and compile with babel.
 
