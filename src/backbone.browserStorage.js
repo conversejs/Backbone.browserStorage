@@ -106,13 +106,13 @@ class BrowserStorage {
             return;
         }
         const ids = collection.map(m => this.getItemName(m.id));
-        this.store.setItem(this.name, ids);
+        return this.store.setItem(this.name, ids);
     }
 
     async save (model) {
         const key = this.getItemName(model.id);
         const data = await this.store.setItem(key, model.toJSON());
-        this.updateCollectionReferences(model.collection);
+        await this.updateCollectionReferences(model.collection);
         return data;
     }
 
@@ -148,7 +148,7 @@ class BrowserStorage {
 
     async destroy (model, collection) {
         await this.store.removeItem(this.getItemName(model.id));
-        this.updateCollectionReferences(collection);
+        await this.updateCollectionReferences(collection);
         return model;
     }
 
