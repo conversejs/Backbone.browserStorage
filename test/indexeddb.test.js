@@ -1,7 +1,9 @@
-import * as BrowserStorage from "../src/backbone.browserStorage";
 import * as localForage from "localforage";
 import Backbone from 'backbone';
+import BrowserStorage from "../src/backbone.browserStorage";
 import { expect } from 'chai';
+
+BrowserStorage.patch(Backbone);
 
 
 describe('Backbone.Collection using IndexedDB', function() {

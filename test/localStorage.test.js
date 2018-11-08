@@ -1,8 +1,10 @@
-import * as BrowserStorage from "../src/backbone.browserStorage";
 import { clone, each, extend, range, times } from 'lodash';
 import Backbone from 'backbone';
+import BrowserStorage from "../src/backbone.browserStorage";
 import { assert } from 'chai';
 import root from 'window-or-global';
+
+BrowserStorage.patch(Backbone);
 
 
 describe("Backbone.browserStorage using localStorage", function () {

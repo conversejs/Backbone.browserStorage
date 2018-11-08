@@ -1,8 +1,10 @@
-import * as BrowserStorage from "../src/backbone.browserStorage";
 import { clone, uniq } from 'lodash';
 import Backbone from 'backbone';
+import BrowserStorage from "../src/backbone.browserStorage";
 import { expect } from 'chai';
 import root from 'window-or-global';
+
+BrowserStorage.patch(Backbone);
 
 const attributes = {
     string: 'String',
