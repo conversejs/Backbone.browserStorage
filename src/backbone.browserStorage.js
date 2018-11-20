@@ -5,7 +5,7 @@
  * https://github.com/conversejs/Backbone.browserStorage
  */
 import * as localForage from "localforage";
-import { isString, result } from 'lodash';
+import { cloneDeep, includes, isString, result } from 'lodash';
 import sessionStorageWrapper from "./drivers/sessionStorage.js";
 
 
@@ -52,13 +52,19 @@ class BrowserStorage {
         const that = this;
 
         async function localSync (method, model, options) {
-            let resp, errorMessage;
-            // We get the collection here, waiting for storeInitialized
-            // will cause another iteration of the event loop, after
-            // which the collection reference will be removed from the model.
+            let resp, errorMessage, promise, new_attributes;
+
+            // We get the collection (and if necessary the model attribute.
+            // Waiting for storeInitialized will cause another iteration of
+            // the event loop, after which the collection reference will
+            // be removed from the model.
             const collection = model.collection;
+            if (includes(['patch', 'update'], method)) {
+                new_attributes = cloneDeep(model.attributes);
+            }
             await that.storeInitialized;
             try {
+                const original_attributes = model.attributes;
                 switch (method) {
                     case "read":
                         if (model.id !== undefined) {
@@ -72,7 +78,24 @@ class BrowserStorage {
                         break;
                     case 'patch':
                     case "update":
-                        resp = await that.update(model, options);
+                        if (options.wait) {
+                            // When `wait` is set to true, Backbone waits until
+                            // confirmation of storage before setting the values on
+                            // the model.
+                            // However, the new attributes needs to be sent, so it
+                            // sets them manually on the model and then removes
+                            // them after calling `sync`.
+                            // Because our `sync` method is asynchronous and we
+                            // wait for `storeInitialized`, the attributes are
+                            // already restored once we get here, so we need to do
+                            // the attributes dance again.
+                            model.attributes = new_attributes;
+                        }
+                        promise = that.update(model);
+                        if (options.wait) {
+                            model.attributes = original_attributes;
+                        }
+                        resp = await promise;
                         break;
                     case "delete":
                         resp = await that.destroy(model, collection);
