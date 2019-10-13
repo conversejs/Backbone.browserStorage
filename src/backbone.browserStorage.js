@@ -5,7 +5,7 @@
  * https://github.com/conversejs/Backbone.browserStorage
  */
 import * as localForage from "localforage";
-import { cloneDeep, includes, isString, result } from 'lodash';
+import { cloneDeep, isString, result } from 'lodash';
 import sessionStorageWrapper from "./drivers/sessionStorage.js";
 
 
@@ -59,7 +59,7 @@ class BrowserStorage {
             // the event loop, after which the collection reference will
             // be removed from the model.
             const collection = model.collection;
-            if (includes(['patch', 'update'], method)) {
+            if (['patch', 'update'].includes(method)) {
                 new_attributes = cloneDeep(model.attributes);
             }
             await that.storeInitialized;
@@ -91,7 +91,7 @@ class BrowserStorage {
                             // the attributes dance again.
                             model.attributes = new_attributes;
                         }
-                        promise = that.update(model);
+                        promise = that.update(model, options);
                         if (options.wait) {
                             model.attributes = original_attributes;
                         }
@@ -132,9 +132,10 @@ class BrowserStorage {
         return this.store.setItem(this.name, ids);
     }
 
-    async save (model) {
+    async save (model, options) {
         const key = this.getItemName(model.id);
-        const data = await this.store.setItem(key, model.toJSON());
+        const attrs = options.patch ? options.attrs : model.toJSON();
+        const data = await this.store.setItem(key, attrs);
         await this.updateCollectionReferences(model.collection);
         return data;
     }
@@ -148,6 +149,10 @@ class BrowserStorage {
             model.set(model.idAttribute, model.id, options);
         }
         return this.save(model);
+    }
+
+    patch (model, options) {
+        return this.save(model, options);
     }
 
     update (model) {
