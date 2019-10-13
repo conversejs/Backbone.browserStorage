@@ -5,7 +5,7 @@
  * https://github.com/conversejs/Backbone.browserStorage
  */
 import * as localForage from "localforage";
-import { cloneDeep, isString, result } from 'lodash';
+import { cloneDeep, get, isString, result } from 'lodash';
 import sessionStorageWrapper from "./drivers/sessionStorage.js";
 
 
@@ -132,9 +132,9 @@ class BrowserStorage {
         return this.store.setItem(this.name, ids);
     }
 
-    async save (model, options) {
+    async save (model, options={}) {
         const key = this.getItemName(model.id);
-        const attrs = options.patch ? options.attrs : model.toJSON();
+        const attrs = get(options, 'patch') ? options.attrs : model.toJSON();
         const data = await this.store.setItem(key, attrs);
         await this.updateCollectionReferences(model.collection);
         return data;

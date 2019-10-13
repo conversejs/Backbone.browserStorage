@@ -13,33 +13,13 @@ describe('Backbone.Collection using IndexedDB', function() {
         'model': Backbone.Model
     });
 
-    it('saves to localForage', async function() {
+    it('saves to localForage', async function () {
         const collection = new Collection();
         await new Promise((resolve, reject) => collection.fetch({success: () => resolve()}));
         const model = await new Promise((resolve, reject) => collection.create({'hello': 'world!'}, {'success': resolve}));
         const id = model.get('id');
         expect(id).to.be.a('string');
-        expect(model.get('hello')).to.equal('world!');
-    });
-
-    it('fetches from localForage', async function () {
-        const collection = new Collection();
-        let model = await new Promise((resolve, reject) => collection.create({'hello': 'world!'}, {'success': resolve}));
-        const models = await new Promise((resolve, reject) => collection.fetch({'success': resolve}));
-        expect(models.length).to.equal(1);
-        expect(collection.length).to.equal(1);
-        model = collection.get(model.id);
-        expect(model.attributes).to.deep.equal({'id': model.id, 'hello': 'world!'});
-    });
-
-
-    it('updates to localForage', async function () {
-        const collection = new Collection();
-        const model = await new Promise((resolve, reject) => collection.create({'hello': 'world!'}, {'success': resolve}));
-        await new Promise((resolve, reject) => collection.get(model.id).save({'hello': 'you!'}, {'success': resolve}));
-        const models = await new Promise((resolve, reject) => collection.fetch({'success': resolve}));
-        expect(models.length).to.equal(1);
-        expect(collection.get(models.at(0).id).get('hello')).to.equal('you!');
+        expect(model.get('hello')).to.equal('world!')
     });
 
     it('removes from localForage', async function () {
