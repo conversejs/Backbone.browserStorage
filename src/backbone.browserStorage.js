@@ -124,11 +124,26 @@ class BrowserStorage {
         return localSync;
     }
 
-    updateCollectionReferences (collection) {
+    removeCollectionReference (model, collection) {
+        if (!collection) {
+            return;
+        }
+        const ids = collection
+            .filter(m => (m.id !== model.id))
+            .map(m => this.getItemName(m.id));
+
+        return this.store.setItem(this.name, ids);
+    }
+
+    addCollectionReference (model, collection) {
         if (!collection) {
             return;
         }
         const ids = collection.map(m => this.getItemName(m.id));
+        const new_id = this.getItemName(model.id);
+        if (!ids.includes(new_id)) {
+            ids.push(new_id);
+        }
         return this.store.setItem(this.name, ids);
     }
 
@@ -136,7 +151,7 @@ class BrowserStorage {
         const key = this.getItemName(model.id);
         const attrs = (options && options.patch) ? options.attrs : model.toJSON();
         const data = await this.store.setItem(key, attrs);
-        await this.updateCollectionReferences(model.collection);
+        await this.addCollectionReference(model, model.collection);
         return data;
     }
 
@@ -155,8 +170,8 @@ class BrowserStorage {
         return this.save(model, options);
     }
 
-    update (model) {
-        return this.save(model);
+    update (model, options) {
+        return this.save(model, options);
     }
 
     find (model) {
@@ -176,7 +191,7 @@ class BrowserStorage {
 
     async destroy (model, collection) {
         await this.store.removeItem(this.getItemName(model.id));
-        await this.updateCollectionReferences(collection);
+        await this.removeCollectionReference(model, collection);
         return model;
     }
 

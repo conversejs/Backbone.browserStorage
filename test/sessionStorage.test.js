@@ -165,7 +165,7 @@ describe('Backbone.BrowserStorage Model using sessionStorage', function () {
             expect(newModel.get('string')).to.be.a('string');
         });
     });
-    
+
     describe('New sessionStorage model', function () {
         beforeEach(() => sessionStorage.clear());
 
@@ -186,6 +186,18 @@ describe('Backbone.browserStorage Collection using sessionStorage', function () 
         const mySavedCollection = new SavedCollection();
         mySavedCollection.create(attributes);
         expect(mySavedCollection.length).to.equal(1);
+    });
+
+    it('saves to sessionStorage when wait=true', async function () {
+        const mySavedCollection = new SavedCollection();
+        await new Promise(success => mySavedCollection.create(attributes, {'wait': true, success}));
+        expect(mySavedCollection.length).to.equal(1);
+        const attrs2 = { string: 'String' };
+        await new Promise(success => mySavedCollection.create(attrs2, {'wait': true, success}));
+        expect(mySavedCollection.length).to.equal(2);
+        await new Promise(success => mySavedCollection.fetch({success}));
+        expect(mySavedCollection.length).to.equal(2);
+
     });
 
     it('cannot duplicate id in sessionStorage', async function () {
