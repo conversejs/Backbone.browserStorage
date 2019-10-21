@@ -149,7 +149,13 @@ class BrowserStorage {
 
     async save (model, options={}) {
         const key = this.getItemName(model.id);
-        const attrs = (options && options.patch) ? options.attrs : model.toJSON();
+        let attrs = {};
+        if (options.patch) {
+            const old_attrs = await this.find(model);
+            Object.assign(attrs, old_attrs, options.attrs);
+        } else {
+            attrs = model.toJSON();
+        }
         const data = await this.store.setItem(key, attrs);
         await this.addCollectionReference(model, model.collection);
         return data;
@@ -164,10 +170,6 @@ class BrowserStorage {
             model.set(model.idAttribute, model.id, options);
         }
         return this.save(model);
-    }
-
-    patch (model, options) {
-        return this.save(model, options);
     }
 
     update (model, options) {

@@ -101,7 +101,8 @@ describe('Backbone.BrowserStorage Model using sessionStorage', function () {
 
         it('saves to sessionStorage with patch', async function () {
             const mySavedModel = new SavedModel({'id': 10});
-            await new Promise((resolve, reject) => mySavedModel.save({'string': 'New String', 'number2': 1234}, {'patch': true, 'success': resolve}));
+            await new Promise(success => mySavedModel.save(null, {success}));
+            await new Promise(success => mySavedModel.save({'string': 'New String', 'number2': 1234}, {'patch': true, success}));
             const item = root.sessionStorage.getItem(`localforage/SavedModel-${mySavedModel.id}`);
             expect(item).to.be.a('string');
             const parsed = JSON.parse(item);
