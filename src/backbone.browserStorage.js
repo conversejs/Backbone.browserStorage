@@ -111,7 +111,13 @@ class BrowserStorage {
 
             if (resp) {
                 if (options && options.success) {
-                    options.success(resp, options);
+                    // When storing, we don't pass back the response (which is
+                    // the set attributes returned from localforage because
+                    // Backbone sets them again on the model and due to the async
+                    // nature of localforage it can cause stale attributes to be
+                    // set on a model after it's been updated in the meantime.
+                    const data = (method === "read") ? resp : null;
+                    options.success(data, options);
                 }
             } else {
                 errorMessage = errorMessage ? errorMessage : "Record Not Found";
@@ -149,14 +155,7 @@ class BrowserStorage {
 
     async save (model, options={}) {
         const key = this.getItemName(model.id);
-        let attrs = {};
-        if (options.patch) {
-            const old_attrs = await this.find(model);
-            Object.assign(attrs, old_attrs, options.attrs);
-        } else {
-            attrs = model.toJSON();
-        }
-        const data = await this.store.setItem(key, attrs);
+        const data = await this.store.setItem(key, model.toJSON());
         await this.addCollectionReference(model, model.collection);
         return data;
     }
