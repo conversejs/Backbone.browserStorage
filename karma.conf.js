@@ -45,6 +45,12 @@ module.exports = function(config) {
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
     reporters,
+    client: {
+      mocha: {
+        reporter: 'html',
+        ui: 'bdd'
+      }
+    },
     port: 9876,
     colors: true,
     // level of logging
