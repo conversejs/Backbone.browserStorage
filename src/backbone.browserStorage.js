@@ -195,21 +195,6 @@ class BrowserStorage {
         return model;
     }
 
-    async _clear () {
-        /* Clear browserStorage for specific collection. */
-        // Remove id-tracking item (e.g., "foo").
-        await this.store.removeItem(this.name);
-
-        // Escape special regex characters in id.
-        const itemRe = new RegExp("^" + this.name.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&") + "-");
-        // Match all data items (e.g., "foo-ID") and remove.
-        for (const k in this.store) {
-            if (itemRe.test(k)) {
-                this.store.removeItem(k);
-            }
-        }
-    }
-
     getStorageSize () {
         return this.store.length;
     }
