@@ -182,7 +182,6 @@ class BrowserStorage {
     async findAll () {
         /* Return the array of all models currently in storage.
          */
-        await this.storeInitialized;
         const data = await this.store.getItem(this.name);
         if (data && data.length) {
             return Promise.all(data.map(item => this.store.getItem(item)));
@@ -197,7 +196,6 @@ class BrowserStorage {
     }
 
     async _clear () {
-        await this.storeInitialized;
         /* Clear browserStorage for specific collection. */
         // Remove id-tracking item (e.g., "foo").
         await this.store.removeItem(this.name);
