@@ -48,6 +48,14 @@ class BrowserStorage {
         this.store = localForage;
     }
 
+    async clear () {
+        await this.store.removeItem(this.name).catch(e => console.error(e));
+        const re = new RegExp(`^${this.name}-`);
+        const keys = await this.store.keys();
+        const removed_keys = keys.filter(k => re.test(k));
+        await Promise.all(removed_keys.map(k => this.store.removeItem(k).catch(e => console.error(e))));
+    }
+
     sync (name) {
         const that = this;
 

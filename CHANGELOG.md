@@ -9,6 +9,7 @@ It's now necessary to explicitly patch Backbone by calling
 
 - Add support for IndexedDB via localForage.
 - Use ES2015 features, bundle with webpack and compile with babel.
+- `_clear` is now renamed to `clear`
 
 ## 0.0.5 (2018-10-28)
 
